@@ -1,0 +1,7 @@
+#Python 3.11.0
+openai==0.27.8
+tiktoken==0.4.0
+backoff
+asyncio
+httpx
+pandas
