@@ -19,25 +19,10 @@ else:
     
 MAX_TRIES = 5
 
-@backoff.on_exception(backoff.expo, openai.error.OpenAIError, max_tries=MAX_TRIES)
-def completions_with_backoff(**kwargs):
-# Adapted from https://github.com/princeton-nlp/tree-of-thought-llm
-    # print(f"Making request to OpenAI API: {kwargs}")
-    response = openai.Completion.create(**kwargs)
-    # print(f"Response: {response}")
-    return response
-
-@backoff.on_exception(backoff.expo, openai.error.OpenAIError, max_tries=MAX_TRIES)
-def chat_with_backoff(**kwargs):
-    # print(f"Making request to OpenAI API: {kwargs}")
-    response = openai.ChatCompletion.create(**kwargs)
-    # print(f"Response: {response}")
-    return response
-
 @backoff.on_exception(backoff.expo, (httpx.ReadTimeout, openai.error.OpenAIError), max_tries=MAX_TRIES)
 async def chat_with_backoff_async(**kwargs):
 
-    request_id = hash(frozenset(str(kwargs))) % 10000000000 # Short hash of kwargs to use as a request ID
+    request_id = hash(frozenset(str(kwargs))) % 10000000000 # Short hash of kwargs to identify requests
     
     logger.debug(f"Making request {request_id} to OpenAI API: {kwargs}")
     async with httpx.AsyncClient(timeout=60.0) as client:
@@ -75,7 +60,7 @@ class OpenAIChatMessages:
         self.messages.append(structure_message(role, content))
         
     def prepend(self, role, content):
-        [structure_message(role, content)].extend(self.messages)
+        self.messages = [structure_message(role, content)].extend(self.messages)
         
     def get(self):
         return self.messages
