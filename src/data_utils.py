@@ -14,7 +14,7 @@ def load_gsm8k(filename, filedir='data/gsm8k'):
         ex.update(numerical_answer=ex["answer"].split("####")[-1].strip().replace(",", ""))
 
     questions = [ex['question'] for ex in examples]
-    answers = [ex['answer'] for ex in examples]
+    answers = [ex['numerical_answer'] for ex in examples]
 
     print(f"{len(questions)} gsm8k examples loaded from {file_path}")
     return questions, answers

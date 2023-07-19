@@ -1,18 +1,7 @@
-from abc import ABC, abstractmethod
 from src import openai_utils
 
 
-
-class LanguageModel(ABC):
-    def __init__(self):
-        pass
-
-    @abstractmethod
-    def generate(self, input, temperature:float, max_tokens:int, n_sample:int):
-        pass
-    
-
-class GPTModel(LanguageModel):
+class GPTModel():
     def __init__(self, model_name:str, system_message=None, temperature=0.7, max_tokens=256):
         self.model_name = model_name
         self.tokenizer = openai_utils.get_tokenizer(model_name)
