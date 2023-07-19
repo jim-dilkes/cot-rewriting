@@ -1,4 +1,4 @@
-import string, os, json
+import string, os, json, sys
 import argparse
 import random
 
@@ -62,8 +62,9 @@ async def process_example(i, example_text, cot_model, answer_model, task_name):
         
         answer_response = await answer_model.generate_async(messages_obj.get(), n_sample=1)
         answer_response = answer_response.strip()
-    
-        print(f"Done {i}")
+
+        print(f"\rDone example {i}", end='')
+        sys.stdout.flush()
         
         return cot_response, answer_response
 
@@ -76,13 +77,13 @@ async def main():
     task_answers_sample = [task_answers[task_texts.index(t)] for t in task_texts_sample]
 
     total_examples = len(task_texts_sample)
+    print(f"Executing on {total_examples} examples")
 
     ## Define the models
     cot_model_name = MODEL_NAME
     cot_temp = 0
     cot_max_tokens = 256
     cot_system_message = PROMPT_SYSTEM_MESSAGE
-    # cot_system_message = "You are a helpful asssistant."
     cot_model = GPTModel(model_name=cot_model_name, system_message=cot_system_message, temperature=cot_temp, max_tokens=cot_max_tokens)
 
     answer_model_name = MODEL_NAME
@@ -96,6 +97,7 @@ async def main():
 
     # Run all the tasks in parallel
     results = await asyncio.gather(*tasks)
+    print()
     cot_responses, pred_answers = zip(*results)
 
     ## Format and record the results            
@@ -131,19 +133,17 @@ async def main():
         "Cost": {
             "Prompt": {
                 "Total": total_prompt_cost,
-                "Per": total_prompt_cost / total_examples,
-                "Currency": "USD"
+                "Per token": total_prompt_cost / total_examples,
             },
             "Completion": {
                 "Total": total_completion_cost,
-                "Per": total_completion_cost / total_examples,
-                "Currency": "USD"
+                "Per token": total_completion_cost / total_examples,
             },
             "Total": {
                 "Total": total_cost,
-                "Per": total_cost / total_examples,
-                "Currency": "USD"
-            }
+                "Per token": total_cost / total_examples,
+            },
+            "Currency": "USD"
         }
     }
 
@@ -152,6 +152,7 @@ async def main():
         json.dump(details, file, indent=4)
 
     print("Accuracy:", results_df['correct'].mean())
+    print()
 
 
 
@@ -172,7 +173,7 @@ if __name__ == '__main__':
                       'CoT-WS']
     system_message_choices = ['ChatGPT-default',
                               'instruct',
-                              'CoT-list']
+                              'instruct-list']
     
     parser = argparse.ArgumentParser()
     parser.add_argument('--task_name', type=str, default='gsm8k', help='', choices=task_choices)
@@ -193,13 +194,11 @@ if __name__ == '__main__':
     NUM_EXAMPLES = 1E9 if args.num_examples == 'all' else int(args.num_examples)
     
     # Define the run name
-    RUN_NAME = f'{TASK_NAME}__{MODEL_NAME}__{PROMPT_TYPE}__{SYSTEM_MESSAGE_TYPE}' + ('' if RUN_IDENTIFIER == '' else f'__{RUN_IDENTIFIER}')
     FILE_NAME = f'{PROMPT_TYPE}__{SYSTEM_MESSAGE_TYPE}' + ('' if RUN_IDENTIFIER == '' else f'__{RUN_IDENTIFIER}')
     FILE_NAME = FILE_NAME.replace('/', '-')
     
-    
     # Make a directory in results for this run
-    results_dir = f'./.results/{MODEL_NAME.replace('/','_')}/{TASK_NAME.replace('/','_')}'
+    results_dir = f"./.results/{TASK_NAME.replace('/','_')}/{MODEL_NAME.replace('/','_')}"
     RESULTS_DIR = os.path.join(results_dir, FILE_NAME)
     if not os.path.exists(RESULTS_DIR):
         os.makedirs(RESULTS_DIR)
@@ -218,8 +217,8 @@ if __name__ == '__main__':
         PROMPT_SYSTEM_MESSAGE = "You are a helpful assistant."
     elif SYSTEM_MESSAGE_TYPE == 'instruct':
         PROMPT_SYSTEM_MESSAGE = "You are an instruction following, problem solving assistant."
-    elif SYSTEM_MESSAGE_TYPE == 'CoT-list':
-        PROMPT_SYSTEM_MESSAGE = "You are an instruction following, problem solving agent. Provide concise, practical responses to instructions. Do not explain responses. Give lists of steps.\n1.\n2.\n3.\n..."
+    elif SYSTEM_MESSAGE_TYPE == 'instruct-list':
+        PROMPT_SYSTEM_MESSAGE = "You are an instruction following, problem solving assistant. Respond with lists \n1.\n2.\n3.\n..."
     
     ANSWER_SYSTEM_MESSAGE = "You are an instruction following, problem solving agent. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer."
     
@@ -227,10 +226,14 @@ if __name__ == '__main__':
     MAX_CONCURRENT_REQUESTS = args.async_concurr # gpt-3.5 rate limit possibly hit above 10
     SEMAPHORE = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
     
-    log_dir = f'./logs/{TASK_NAME}'
+    
+     # Make a directory in logs for this run
+    logs_dir = f"./.logs/{TASK_NAME.replace('/','_')}/{MODEL_NAME.replace('/','_')}"
+    if not os.path.exists(logs_dir):
+        os.makedirs(logs_dir)
     
     # Configure logging
-    logging.basicConfig(filename=f'{log_dir}/{RUN_NAME}.log',
+    logging.basicConfig(filename=f'{logs_dir}/{FILE_NAME}.log',
                         level=logging.DEBUG,
                         format='%(asctime)s - %(levelname)s - %(message)s')
     
