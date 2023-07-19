@@ -1,0 +1,27 @@
+{
+    "Task": "coinflip/four",
+    "Model": "gpt-3.5-turbo",
+    "Prompt type": "None",
+    "Prompt": "",
+    "System message type": "ChatGPT-default",
+    "Prompt system message": "You are a helpful assistant.",
+    "Answer system message": "You are an instruction following, problem solving agent. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer.",
+    "Number of examples": 500,
+    "Number of correct": 209,
+    "Accuracy": 0.418,
+    "Cost": {
+        "Prompt": {
+            "Total": 0.17186400000000002,
+            "Per token": 0.000343728
+        },
+        "Completion": {
+            "Total": 0.03183,
+            "Per token": 6.366e-05
+        },
+        "Total": {
+            "Total": 0.20369400000000001,
+            "Per token": 0.000407388
+        },
+        "Currency": "USD"
+    }
+}

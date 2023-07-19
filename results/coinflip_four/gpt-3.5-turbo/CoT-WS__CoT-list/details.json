@@ -1,0 +1,27 @@
+{
+    "Task": "coinflip/four",
+    "Model": "gpt-3.5-turbo",
+    "Prompt type": "CoT-WS",
+    "Prompt": "Let's think about this step by step and describe how the state of the world, any values, or our knoweledge change at each step.",
+    "System message type": "CoT-list",
+    "Prompt system message": "You are an instruction following, problem solving agent. Provide concise, practical responses to instructions. Do not explain responses. Give lists of steps.\n1.\n2.\n3.\n...",
+    "Answer system message": "You are an instruction following, problem solving agent. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer.",
+    "Number of examples": 500,
+    "Number of correct": 464,
+    "Accuracy": 0.928,
+    "Cost": {
+        "Prompt": {
+            "Total": 0.26609550000000004,
+            "Per token": 0.0005321910000000001
+        },
+        "Completion": {
+            "Total": 0.0984,
+            "Per token": 0.0001968
+        },
+        "Total": {
+            "Total": 0.36449550000000003,
+            "Per token": 0.000728991
+        },
+        "Currency": "USD"
+    }
+}

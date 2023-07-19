@@ -198,7 +198,7 @@ if __name__ == '__main__':
     FILE_NAME = FILE_NAME.replace('/', '-')
     
     # Make a directory in results for this run
-    results_dir = f"./.results/{TASK_NAME.replace('/','_')}/{MODEL_NAME.replace('/','_')}"
+    results_dir = f"./results/{TASK_NAME.replace('/','_')}/{MODEL_NAME.replace('/','_')}"
     RESULTS_DIR = os.path.join(results_dir, FILE_NAME)
     if not os.path.exists(RESULTS_DIR):
         os.makedirs(RESULTS_DIR)

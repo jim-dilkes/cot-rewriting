@@ -1,0 +1,38 @@
+Paper,Task,Model,Prompt type,Accuracy
+Chen et. al. (2023),tracking_shuffled_objects/three_objects,ChatGPT (March 2023),Trigger words,0.307
+Chen et. al. (2023),tracking_shuffled_objects/three_objects,ChatGPT (March 2023),None,0.277
+Chen et. al. (2023),tracking_shuffled_objects/three_objects,ChatGPT (March 2023),CoT,0.589
+Chen et. al. (2023),tracking_shuffled_objects/three_objects,GPT-3,Trigger words,0.313
+Chen et. al. (2023),tracking_shuffled_objects/three_objects,GPT-3,CoT,0.524
+Chen et. al. (2023),gsm8k,ChatGPT (March 2023),Trigger words,0.440
+Chen et. al. (2023),gsm8k,ChatGPT (March 2023),None,0.758
+Chen et. al. (2023),gsm8k,ChatGPT (March 2023),CoT,0.744
+Chen et. al. (2023),gsm8k,GPT-3,Trigger words,0.104
+Chen et. al. (2023),gsm8k,GPT-3,CoT,0.407
+Chen et. al. (2023),coinflip,ChatGPT (March 2023),Trigger words,0.314
+Chen et. al. (2023),coinflip,ChatGPT (March 2023),None,0.200
+Chen et. al. (2023),coinflip,ChatGPT (March 2023),CoT,0.340
+Chen et. al. (2023),coinflip,GPT-3,Trigger words,0.128
+Chen et. al. (2023),coinflip,GPT-3,CoT,0.914
+Wei et. al. (2022),coinflip/four,LaMDA-137B,CoT-1Shot,0.745
+Wei et. al. (2022),coinflip/four,LaMDA-68B,CoT-1Shot,0.596
+Wei et. al. (2022),coinflip/four,PaLM-62B,CoT-1Shot,0.724
+Wei et. al. (2022),coinflip/four,PaLM-540B,CoT-1Shot,0.902
+Wei et. al. (2022),coinflip/four,UL2-20B,CoT-1Shot,0.504
+Wei et. al. (2022),coinflip/four,LaMDA-137B,None,0.491
+Wei et. al. (2022),coinflip/four,LaMDA-68B,None,0.509
+Wei et. al. (2022),coinflip/four,PaLM-62B,None,0.383
+Wei et. al. (2022),coinflip/four,PaLM-540B,None,0.548
+Wei et. al. (2022),coinflip/four,UL2-20B,None,0.522
+Wei et. al. (2022),gsm8k,LaMDA-137B,CoT-1Shot,0.143
+Wei et. al. (2022),gsm8k,LaMDA-68B,CoT-1Shot,0.082
+Wei et. al. (2022),gsm8k,PaLM-62B,CoT-1Shot,0.299
+Wei et. al. (2022),gsm8k,PaLM-540B,CoT-1Shot,0.569
+Wei et. al. (2022),gsm8k,UL2-20B,CoT-1Shot,0.044
+Wei et. al. (2022),gsm8k,LaMDA-137B,None,0.065
+Wei et. al. (2022),gsm8k,LaMDA-68B,None,0.057
+Wei et. al. (2022),gsm8k,PaLM-62B,None,0.096
+Wei et. al. (2022),gsm8k,PaLM-540B,None,0.179
+Wei et. al. (2022),gsm8k,UL2-20B,None,0.041
+Wei et. al. (2022),gsm8k,GPT-3 (text-davinci-002),CoT-1Shot,0.469
+Wei et. al. (2022),gsm8k,GPT-3 (text-davinci-002),None,0.156

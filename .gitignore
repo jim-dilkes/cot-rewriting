@@ -161,7 +161,6 @@ cython_debug/
 
 
 .dev/*
-.results/*
 data/strategyqa/*
 data/tracking_shuffled_objects/*
 data/prontoqa/*
