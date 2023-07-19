@@ -30,20 +30,6 @@ class GPTModel(LanguageModel):
         else:
             raise ValueError(f"Unknown model name: {model_name}")
 
-    def generate(self,  input, n_sample:int=1, logit_bias:dict={}):
-        if self.openai_model_type == 'chat':
-            response = openai_utils.chat_with_backoff(model=self.model_name,
-                                                      messages=self.system_message_obj + input,
-                                                      temperature=self.temperature,
-                                                      max_tokens=self.max_tokens,
-                                                      logit_bias=logit_bias,
-                                                      n=n_sample)
-            
-        self.prompt_tokens += response['usage']['prompt_tokens']
-        self.completion_tokens += response['usage']['completion_tokens']
-        
-        return response['choices'][0]['message']['content']
-    
     async def generate_async(self,  input:list, n_sample:int=1, logit_bias:dict={}):
         
         if self.openai_model_type == 'chat':
