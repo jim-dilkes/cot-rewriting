@@ -2,7 +2,7 @@ import openai
 import tiktoken
 import os
 import backoff
-import httpx
+import httpx, ssl
 import json
 import time
 
@@ -19,7 +19,7 @@ else:
     
 MAX_TRIES = 5
 
-@backoff.on_exception(backoff.expo, (httpx.ReadTimeout, openai.error.OpenAIError), max_tries=MAX_TRIES)
+@backoff.on_exception(backoff.expo, (httpx.ReadTimeout, ssl.SSLError, openai.error.OpenAIError), max_tries=MAX_TRIES)
 async def chat_with_backoff_async(**kwargs):
 
     request_id = hash(frozenset(str(kwargs))) % 10000000000 # Short hash of kwargs to identify requests
@@ -30,6 +30,9 @@ async def chat_with_backoff_async(**kwargs):
             response = await client.post('https://api.openai.com/v1/chat/completions', headers={'Authorization': f'Bearer {api_key}'}, json=kwargs)
         except httpx.ReadTimeout as e:
             logger.error(f"Request {request_id} timed out: {e}")
+            raise e
+        except ssl.SSLError as e:
+            logger.error(f"Request {request_id} SSLerror: {e}")
             raise e
         
     if response.status_code != 200:
