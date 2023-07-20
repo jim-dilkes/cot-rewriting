@@ -165,6 +165,7 @@ if __name__ == '__main__':
                    'tracking_shuffled_objects/five_objects',
                    'tracking_shuffled_objects/seven_objects',
                    'coinflip/four',
+                   'coinflip/eight',
                    'strategyqa',
                    'prontoqa']
     model_choices = ['gpt-3.5-turbo']

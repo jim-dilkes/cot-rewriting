@@ -23,7 +23,7 @@ nd = NameDataset()
 
 # Variables
 n_examples = 500
-n_flips_options = [4]
+n_flips_options = [8]
 initial_states = ['heads']
 # initial_states = ['heads', 'tails']
 
@@ -64,7 +64,7 @@ def generate_coinflip_example():
 
 
 coinflip_dataset = [generate_coinflip_example() for _ in range(n_examples)]
-with open('coinflip_dataset.csv', 'w', newline='') as csvfile:
+with open('task.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, delimiter=',')
     writer.writerow(['description', 'final_state', 'total_flips', 'total_events'])
     for example in coinflip_dataset:
