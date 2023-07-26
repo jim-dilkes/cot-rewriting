@@ -3,7 +3,7 @@ import argparse
 import random
 
 import src.data_utils as data_utils
-from src.models import GPTModel
+from src.models import GPTModel, HFInferenceModel
 from src.openai_utils import OpenAIChatMessages
 
 import pandas as pd
@@ -14,20 +14,22 @@ import logging
 
 """ TASK SPECIFIC CODE """
 # Task specific prompt to generate the correct answer string using the CoT solution
-def get_task_answer_prompt(task_name):
+def append_task_answer_prompt(task_name, messages_obj:OpenAIChatMessages):
+    """ In place udpate of messages_obj with the task specific answer prompt """
     if task_name == 'gsm8k':
-        return "Respond with a single value that is the answer to the problem. Do not explain your answer or include symbols"
+        messages_obj.append(role='user', content="Respond with a single value that is the answer to the problem. Do not explain your answer or include symbols")
     elif task_name[:len('tracking_shuffled_objects')] == 'tracking_shuffled_objects':
-        return "Respond with the correct completion of the problem statement. Do not include names. Give only the entity that completes the final sentence."
+        # messages_obj.append(role='user', content="Respond with the correct completion of the problem statement. Do not explain your answer. Do not repeat the problem statement give only the entity. Examples:\nblue ball\nJason\nThe Great Gatsby\ngoalkeeper")
+        messages_obj.append(role='user', content="Respond with the correct completion of the problem statement. Do not include names. Give only the entity that completes the final sentence")
     elif task_name[:len('coinflip')] == 'coinflip':
-        return "Respond with the final state of the coin. Do not explain your answer only use heads or tails"
+        messages_obj.append(role='user', content="Respond with the final state of the coin. Do not explain your answer only use heads or tails")
     elif task_name == 'strategyqa':
-        return "Respond with the answer to the question. Do not explain your answer only use yes or no"
+        messages_obj.append(role='user', content="Respond with the answer to the question. Do not explain your answer only use yes or no")
     elif task_name == 'prontoqa':
-        return "Respond with the answer to the question. Do not explain your answer only use true or false"
+        messages_obj.append(role='user', content="Respond with the answer to the question. Do not explain your answer only use true or false")
     else:
-        raise ValueError(f"Unknown benchmark name: {task_name}")
-
+        raise ValueError(f"Unknown benchmark name: {task_name}")      
+    
 # Task data load
 def load_task(task_name, task_dir):
     if task_name == 'gsm8k':
@@ -54,55 +56,87 @@ def clean_answer(answer):
         punctuation = string.punctuation
     return str(answer).lower().translate(str.maketrans("", "", punctuation)).strip()
 
-async def generate_and_record(model, content, inputs_lst, response_lst, **kwargs):
+async def generate_and_record(model, messages_obj, inputs_lst, outputs_lst, **kwargs):
     """ Generate a response from the model and record the inputs and outputs """
-    input, response = await model.generate_async(content, **kwargs)
-    inputs_lst.append(input)
-    response_lst.append(response)
+    response = await model.generate_async(messages_obj, **kwargs)
+    inputs_lst.append(messages_obj.get())
+    outputs_lst.append(response)
     return response
 
-async def process_example(i, example_text, cot_model, answer_model, validation_model, decision_model, task_name):
+async def process_example(i, example_text, cot_model, answer_model, task_name):
     # Acquire the semaphore before processing an example
     async with SEMAPHORE:
-        all_inputs_lst = []
-        all_responses_lst = []
-        answers_lst = []
+        all_inputs = []
+        all_outputs = []
+        messages_obj = OpenAIChatMessages()
 
-        ## Generate CoT Solution        
-        cot_content = example_text
-        cot_responses_lst = [await generate_and_record(cot_model, cot_content, all_inputs_lst, all_responses_lst, n_sample=1)]
+        ## Generate CoT Solution
+        messages_obj.append(role='system', content=PROMPT_SYSTEM_MESSAGE)
+        messages_obj.append(role='user', content=f"{example_text}")
+        messages_obj.append(role='user', content=PROMPT_TEXT)
+        cot_responses = [await generate_and_record(cot_model, messages_obj, all_inputs, all_outputs, n_sample=1)]
         
+        answer_responses = []
         ## Extract the answer from the final CoT solution
-        answer_content = f"Problem Statement: {example_text}\n\nProposed Solution: {cot_responses_lst[-1]}\n\n{ANSWER_PROMPT_TEXT}"
-        answers_lst.append(clean_answer(await generate_and_record(answer_model, answer_content, all_inputs_lst, all_responses_lst, n_sample=1)))
+        messages_obj.reset()
+        messages_obj.append(role='system', content=ANSWER_SYSTEM_MESSAGE)
+        messages_obj.append(role='user', content=f"Problem Statement:\n{example_text}")
+        messages_obj.append(role='user', content=f"Proposed Solution:\n{cot_responses[-1]}")
+
+        append_task_answer_prompt(task_name, messages_obj)
+        answer = await generate_and_record(answer_model, messages_obj, all_inputs, all_outputs, n_sample=1)
+        answer_responses.append(clean_answer(answer))
         
         j=0
         while j < MAX_REWRITES:
             ## Ask whether to rewrite
             # Stick together the CoT responses, writing the response number before each one
             # cot_message = '\n'.join([f"Proposed solution {i+1}: {r}" for i, r in enumerate(cot_responses)])
-            cot_answer_message = '\n'.join([f"Proposed solution {i+1}: {r[0]}\nAnswer {i+1}: {r[1]}" for i, r in enumerate(zip(cot_responses_lst, answers_lst))])
+            cot_answer_message = '\n'.join([f"Proposed solution {i+1}: {r[0]}\nAnswer {i+1}: {r[1]}" for i, r in enumerate(zip(cot_responses, answer_responses))])
             
-            ## ASK WHETHER TO REWRITE            
-            validation_content = "Problem Statement: {example_text}\n\n{cot_answer_message}\n\n{ASK_REWRITE_MESSAGE}}"
-            validation_response = await generate_and_record(validation_model, validation_content, all_inputs_lst, all_responses_lst, n_sample=1)
+            ## ASK WHETHER TO REWRITE
+            messages_obj.reset()
+            messages_obj.append(role='system', content=VALIDATE_COT_SYSTEM_MESSAGE)
+            messages_obj.append(role='user', content=f"Problem Statement:\n{example_text}")
+            messages_obj.append(role='user', content=cot_answer_message)
+            messages_obj.append(role='user', content=VALIDATE_COT_MESSAGE)
+
+            critic_response = await generate_and_record(cot_model, messages_obj, all_inputs, all_outputs, n_sample=1)
             
             ## EXTRACT REWRITE RESPONSE
-            decision_content = f"Solution validation: {validation_response}"
-            decision_response = await generate_and_record(decision_model, decision_content, all_inputs_lst, all_responses_lst, n_sample=1)
+            if EXTRACT_REWRITE_RESPONSE:
+                messages_obj.reset()
+                messages_obj.append(role='system', content=ANSWER_SYSTEM_MESSAGE)
+                # messages_obj.append(role='user', content=VALIDATE_COT_MESSAGE)
+                messages_obj.append(role='user', content="Previous solution critic: " + critic_response)
+                messages_obj.append(role='user', content="Decide whether to attempt the solution again, responding yes if the previous solution was incorrect or no if it was correct")
+                rewrite_response = await generate_and_record(answer_model, messages_obj, all_inputs, all_outputs, n_sample=1)
 
-            if clean_answer(decision_response)[-3:] != 'yes':
+            if clean_answer(rewrite_response)[-3:] != 'yes':
                 j=MAX_REWRITES
                 break
 
             ## PERFORM REWRITE
-            cot_content = f"Problem Statement: {example_text}\n\n{cot_answer_message}\n\n{REWRITE_MESSAGE}"
-            cot_responses_lst.append(generate_and_record(cot_model, cot_content, all_inputs_lst, all_responses_lst, n_sample=1))
+            messages_obj.reset()
+            messages_obj.append(role='system', content=PROMPT_SYSTEM_MESSAGE)
+            messages_obj.append(role='user', content=f"Problem Statement:\n{example_text}")
+            messages_obj.append(role='user', content="Previous solution: " + cot_answer_message)
+            messages_obj.append(role='user', content="Critique of solution: " + critic_response)
+            messages_obj.append(role='user', content=REWRITE_MESSAGE)
+            
+            response = await generate_and_record(cot_model, messages_obj, all_inputs, all_outputs, n_sample=1)
+            cot_responses.append(response)
             
             
             ## EXTRACT NEW ANSWER
-            answer_content = f"Problem Statement: {example_text}\n\nProposed Solution: {cot_responses_lst[-1]}\n\n{ANSWER_PROMPT_TEXT}"
-            answers_lst.append(clean_answer(await generate_and_record(answer_model, answer_content, all_inputs_lst, all_responses_lst, n_sample=1)))
+            messages_obj.reset()
+            messages_obj.append(role='system', content=ANSWER_SYSTEM_MESSAGE)
+            messages_obj.append(role='user', content=f"Problem Statement:\n{example_text}")
+            messages_obj.append(role='user', content=f"Proposed Solution:\n{cot_responses[-1]}")
+            append_task_answer_prompt(task_name, messages_obj)
+            
+            answer = await generate_and_record(answer_model, messages_obj, all_inputs, all_outputs, n_sample=1)
+            answer_responses.append(clean_answer(answer))
             
             j+=1
 
@@ -110,7 +144,7 @@ async def process_example(i, example_text, cot_model, answer_model, validation_m
         print(f"\rDone example {i}", end='')
         sys.stdout.flush()
         
-        return cot_responses_lst, answers_lst, (all_inputs_lst, all_responses_lst)
+        return cot_responses, answer_responses, (all_inputs, all_outputs)
     
     
     
@@ -133,39 +167,31 @@ async def main():
 
     ## Define the models
     cot_model_name = MODEL_NAME
-    cot_temp = 0
-    cot_max_tokens = 256
-    cot_model = GPTModel(model_name=cot_model_name, 
-                         system_message=PROMPT_SYSTEM_MESSAGE, 
-                         prompt_message=PROMPT_TEXT,
-                         temperature=cot_temp,
-                         max_tokens=cot_max_tokens)
+    cot_temp = 0.0001
+    cot_max_tokens = 512
+
+    critic_model_name = MODEL_NAME
+    critic_temp = 0.0001
+    critic_max_tokens = 512
 
     answer_model_name = MODEL_NAME
-    answer_temp = 0
-    answer_max_tokens = 40
-    answer_model = GPTModel(model_name=answer_model_name,
-                            system_message=ANSWER_SYSTEM_MESSAGE,
-                            prompt_message=get_task_answer_prompt(TASK_NAME),
-                            temperature=answer_temp,
-                            max_tokens=answer_max_tokens)
+    answer_temp = 0.0001
+    answer_max_tokens = 256
 
-    validation_temp = 0
-    validation_max_tokens = 40
-    validation_model = GPTModel(model_name=cot_model_name,
-                            system_message=PROMPT_SYSTEM_MESSAGE,
-                            prompt_message=ASK_REWRITE_MESSAGE,
-                            temperature=validation_temp,
-                            max_tokens=validation_max_tokens)
+    if MODEL_NAME == 'falcon-40b':
+        cot_model = HFInferenceModel(model_name=cot_model_name, temperature=cot_temp, max_tokens=cot_max_tokens)
+        answer_model = HFInferenceModel(model_name=answer_model_name, temperature=answer_temp, max_tokens=answer_max_tokens)
+    elif MODEL_NAME == 'gpt-3.5-turbo':
+        cot_model = GPTModel(model_name=cot_model_name, temperature=cot_temp, max_tokens=cot_max_tokens)
+        answer_model = GPTModel(model_name=answer_model_name, temperature=answer_temp, max_tokens=answer_max_tokens)
+    else:
+        raise ValueError(f"Unknown model name: {MODEL_NAME}")
     
-    rewrite_model = GPTModel(model_name=cot_model_name,
-                            system_message=ANSWER_SYSTEM_MESSAGE,
-                            prompt_message="Decide whether to attempt the solution again, responding yes if you were incorrect or no if you were correct",
-                            temperature=answer_temp,
-                            max_tokens=answer_max_tokens)
     
+    #### PREPARE ASYNC TASKS AND RUN ####
+
     # Create an asyncio task for each example in dataset
-    tasks = [process_example(i, example, cot_model, answer_model, validation_model, rewrite_model, TASK_NAME) for i, example in enumerate(task_texts_sample)]
+    tasks = [process_example(i, example, cot_model, answer_model, TASK_NAME) for i, example in enumerate(task_texts_sample)]
 
     # Run all the tasks in parallel
     results = await asyncio.gather(*tasks)
@@ -235,7 +261,6 @@ async def main():
         "Prompt system message": PROMPT_SYSTEM_MESSAGE,
         "Answer system message": ANSWER_SYSTEM_MESSAGE,
         "Max rewrites": MAX_REWRITES,
-        "Rewrite prompt"
         "Number of examples": total_examples,
         "Number of correct": int(results_df['correct'].sum()),
         "Accuracy": float(results_df['correct'].mean()),
@@ -315,7 +340,10 @@ if __name__ == '__main__':
                    'prontoqa']
     
     model_apis = {
-        'gpt-3.5-turbo': 'openai'
+        'gpt-3.5-turbo': 'openai',
+        'falcon-40b': 'hf_inference',
+        'falcon-40b-gptq': 'hf_inference',
+        'llama-2-7b': 'hf_inference'
     }
     model_choices = model_apis.keys()
     
@@ -376,8 +404,8 @@ if __name__ == '__main__':
     if SYSTEM_MESSAGE_TYPE == 'ChatGPT-default':
         PROMPT_SYSTEM_MESSAGE = "You are a helpful assistant."
     elif SYSTEM_MESSAGE_TYPE == 'instruct':
-        PROMPT_SYSTEM_MESSAGE = "You are an instruction following, problem solving assistant."
-        # PROMPT_SYSTEM_MESSAGE = "You are an instruction following, problem solving assistant. Do not do anything that is not explicitly instructed."
+        # PROMPT_SYSTEM_MESSAGE = "You are an instruction following, problem solving assistant."
+        PROMPT_SYSTEM_MESSAGE = "You are an instruction following, problem solving assistant. Your responses are concise precise analytic. Do not give any response that is not explicitly requested."
     elif SYSTEM_MESSAGE_TYPE == 'instruct-list':
         PROMPT_SYSTEM_MESSAGE = "You are an instruction following, problem solving assistant. Respond with lists \n1.\n2.\n3.\n..."
     elif SYSTEM_MESSAGE_TYPE == 'None':
@@ -385,13 +413,14 @@ if __name__ == '__main__':
     
     # ASK_REWRITE_MESSAGE = "Let's think about whether our previous solution is correct and decide if we should reattempt it. Do not explain the decision only respond yes to reattempt or no to terminate"
     # ASK_REWRITE_MESSAGE = "Let's think about whether our previous solution is correct and decide if we should reattempt it. Explain your reasoning. Your response must finish with either the word yes to reattempt or no to terminate"
-    ASK_REWRITE_MESSAGE = "Validate your previous response, describing what if anything is wrong with your response. Do not give another solution You're answer could be correct, do not assume it is wrong. If youre answer is correct say so. Do not solve the problem again."
-    REWRITE_MESSAGE = "Write a new solution to the problem. Use the previous solution but correct any errors described in the previous response."
+    VALIDATE_COT_SYSTEM_MESSAGE = 'You are an instruction following, solution criticing assistant. You give concise analytic assessment of solutions. You do not attempt to solve problems yourself.'
+    VALIDATE_COT_MESSAGE = "Validate the solution above describing what if anything is wrong with it. Do not attempt a solution yourself. The answer could be correct, do not assume it is wrong. Concisely critique each step individually but do not repeat the original step."
+    REWRITE_MESSAGE = "Write a new solution to the problem. Use the previous solution but correct any errors described in the critique"
     # REWRITE_SYSTEM_MESSAGE = PROMPT_SYSTEM_MESSAGE
     EXTRACT_REWRITE_RESPONSE = True
     
     ANSWER_SYSTEM_MESSAGE = "You are an instruction following, problem solving agent. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer."
-    ANSWER_PROMPT_TEXT = get_task_answer_prompt(TASK_NAME)
+    
     
     # Specifies the maximum number of concurrent requests to the OpenAI API
     MAX_CONCURRENT_REQUESTS = args.async_concurr # gpt-3.5 rate limit possibly hit above 8
