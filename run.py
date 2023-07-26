@@ -14,20 +14,23 @@ import logging
 
 """ TASK SPECIFIC CODE """
 # Task specific prompt to generate the correct answer string using the CoT solution
+def get_task_answer_prompt(task_name):
+    if task_name == 'gsm8k':
+        return "Respond with a single value that is the answer to the problem. Do not explain your answer or include symbols"
+    elif task_name[:len('tracking_shuffled_objects')] == 'tracking_shuffled_objects':
+        return "Respond with the correct completion of the problem statement. Do not explain your answer. Do not repeat the problem statement give only the entity. Examples:\nblue ball\nJason\nThe Great Gatsby\ngoalkeeper"
+    elif task_name[:len('coinflip')] == 'coinflip':
+        return "Respond with the final state of the coin. Do not explain your answer only use heads or tails"
+    elif task_name == 'strategyqa':
+        return "Respond with the answer to the question. Do not explain your answer only use yes or no"
+    elif task_name == 'prontoqa':
+        return "Respond with the answer to the question. Do not explain your answer only use true or false"
+    else:
+        raise ValueError(f"Unknown benchmark name: {task_name}")
+
 def append_task_answer_prompt(task_name, messages_obj:OpenAIChatMessages):
     """ In place udpate of messages_obj with the task specific answer prompt """
-    if task_name == 'gsm8k':
-        messages_obj.append(role='user', content="Respond with a single value that is the answer to the problem. Do not explain your answer or include symbols")
-    elif task_name[:len('tracking_shuffled_objects')] == 'tracking_shuffled_objects':
-        messages_obj.append(role='user', content="Respond with the correct completion of the problem statement. Do not explain your answer. Do not repeat the problem statement give only the entity. Examples:\nblue ball\nJason\nThe Great Gatsby\ngoalkeeper")
-    elif task_name[:len('coinflip')] == 'coinflip':
-        messages_obj.append(role='user', content="Respond with the final state of the coin. Do not explain your answer only use heads or tails")
-    elif task_name == 'strategyqa':
-        messages_obj.append(role='user', content="Respond with the answer to the question. Do not explain your answer only use yes or no")
-    elif task_name == 'prontoqa':
-        messages_obj.append(role='user', content="Respond with the answer to the question. Do not explain your answer only use true or false")
-    else:
-        raise ValueError(f"Unknown benchmark name: {task_name}")       
+    return messages_obj.append(role='user', content=get_task_answer_prompt(task_name))   
     
 # Task data load
 def load_task(task_name, task_dir):
@@ -49,18 +52,9 @@ def load_task(task_name, task_dir):
 async def process_example(i, example_text, cot_model, answer_model, task_name):
     # Acquire the semaphore before processing an example
     async with SEMAPHORE:
-        messages_obj = OpenAIChatMessages()
         ## Generate CoT Solution
-        messages_obj.append(role='user', content=f"{example_text}")
-        messages_obj.append(role='user', content=PROMPT_TEXT)
-        cot_response = await cot_model.generate_async(messages_obj.get(), n_sample=1)
-        
-        messages_obj.reset()
-        messages_obj.append(role='user', content=f"Problem Statement:\n{example_text}")
-        messages_obj.append(role='user', content=f"Proposed Solution:\n{cot_response}")
-        append_task_answer_prompt(task_name, messages_obj)
-        
-        answer_response = await answer_model.generate_async(messages_obj.get(), n_sample=1)
+        cot_response = await cot_model.generate_async(example_text)
+        answer_response = await answer_model.generate_async(f"Problem Statement: {example_text}\nProposed Solution: {cot_response}")
         answer_response = answer_response.strip()
 
         print(f"\rDone example {i}", end='')
@@ -83,14 +77,20 @@ async def main():
     cot_model_name = MODEL_NAME
     cot_temp = 0
     cot_max_tokens = 256
-    cot_system_message = PROMPT_SYSTEM_MESSAGE
-    cot_model = GPTModel(model_name=cot_model_name, system_message=cot_system_message, temperature=cot_temp, max_tokens=cot_max_tokens)
+    cot_model = GPTModel(model_name=cot_model_name, 
+                         system_message=PROMPT_SYSTEM_MESSAGE, 
+                         prompt_message=PROMPT_TEXT,
+                         temperature=cot_temp,
+                         max_tokens=cot_max_tokens)
 
     answer_model_name = MODEL_NAME
     answer_temp = 0
     answer_max_tokens = 40
-    answer_system_message = ANSWER_SYSTEM_MESSAGE
-    answer_model = GPTModel(model_name=answer_model_name, system_message=answer_system_message, temperature=answer_temp, max_tokens=answer_max_tokens)
+    answer_model = GPTModel(model_name=answer_model_name,
+                            system_message=ANSWER_SYSTEM_MESSAGE,
+                            prompt_message=get_task_answer_prompt(TASK_NAME),
+                            temperature=answer_temp,
+                            max_tokens=answer_max_tokens)
 
     # Create an asyncio task for each example in dataset
     tasks = [process_example(i, example, cot_model, answer_model, TASK_NAME) for i, example in enumerate(task_texts_sample)]
