@@ -4,7 +4,6 @@ import random
 
 import src.data_utils as data_utils
 from src.models import GPTModel
-from src.openai_utils import OpenAIChatMessages
 
 import pandas as pd
 import asyncio
@@ -84,7 +83,7 @@ async def process_example(i, example_text, cot_model, answer_model, validation_m
             cot_answer_message = '\n'.join([f"Proposed solution {i+1}: {r[0]}\nAnswer {i+1}: {r[1]}" for i, r in enumerate(zip(cot_responses_lst, answers_lst))])
             
             ## ASK WHETHER TO REWRITE            
-            validation_content = "Problem Statement: {example_text}\n\n{cot_answer_message}\n\n{ASK_REWRITE_MESSAGE}}"
+            validation_content = f"Problem Statement: {example_text}\n\n{cot_answer_message}"
             validation_response = await generate_and_record(validation_model, validation_content, all_inputs_lst, all_responses_lst, n_sample=1)
             
             ## EXTRACT REWRITE RESPONSE
@@ -96,8 +95,8 @@ async def process_example(i, example_text, cot_model, answer_model, validation_m
                 break
 
             ## PERFORM REWRITE
-            cot_content = f"Problem Statement: {example_text}\n\n{cot_answer_message}\n\n{REWRITE_MESSAGE}"
-            cot_responses_lst.append(generate_and_record(cot_model, cot_content, all_inputs_lst, all_responses_lst, n_sample=1))
+            cot_content = f"Problem Statement: {example_text}\n\n{cot_answer_message}\n\n{DECISION_PROMPT}"
+            cot_responses_lst.append(await generate_and_record(cot_model, cot_content, all_inputs_lst, all_responses_lst, n_sample=1))
             
             
             ## EXTRACT NEW ANSWER
@@ -132,35 +131,33 @@ async def main():
     #### DEFINE MODELS ####
 
     ## Define the models
-    cot_model_name = MODEL_NAME
     cot_temp = 0
-    cot_max_tokens = 256
-    cot_model = GPTModel(model_name=cot_model_name, 
-                         system_message=PROMPT_SYSTEM_MESSAGE, 
-                         prompt_message=PROMPT_TEXT,
+    cot_max_tokens = 512
+    cot_model = GPTModel(model_name=MODEL_NAME, 
+                         system_message=COT_SYS_MSG, 
+                         prompt_message=COT_PROMPT,
                          temperature=cot_temp,
                          max_tokens=cot_max_tokens)
 
-    answer_model_name = MODEL_NAME
     answer_temp = 0
     answer_max_tokens = 40
-    answer_model = GPTModel(model_name=answer_model_name,
-                            system_message=ANSWER_SYSTEM_MESSAGE,
+    answer_model = GPTModel(model_name=MODEL_NAME,
+                            system_message=ANSWER_SYS_MSG,
                             prompt_message=get_task_answer_prompt(TASK_NAME),
                             temperature=answer_temp,
                             max_tokens=answer_max_tokens)
 
     validation_temp = 0
-    validation_max_tokens = 40
-    validation_model = GPTModel(model_name=cot_model_name,
-                            system_message=PROMPT_SYSTEM_MESSAGE,
-                            prompt_message=ASK_REWRITE_MESSAGE,
+    validation_max_tokens = 512
+    validation_model = GPTModel(model_name=MODEL_NAME,
+                            system_message=VALIDATE_SYS_MSG,
+                            prompt_message=VALIDATE_PROMPT,
                             temperature=validation_temp,
                             max_tokens=validation_max_tokens)
     
-    rewrite_model = GPTModel(model_name=cot_model_name,
-                            system_message=ANSWER_SYSTEM_MESSAGE,
-                            prompt_message="Decide whether to attempt the solution again, responding yes if you were incorrect or no if you were correct",
+    rewrite_model = GPTModel(model_name=MODEL_NAME,
+                            system_message=ANSWER_SYS_MSG,
+                            prompt_message=DECISION_PROMPT,
                             temperature=answer_temp,
                             max_tokens=answer_max_tokens)
     
@@ -230,10 +227,10 @@ async def main():
         "Task": TASK_NAME,
         "Model": MODEL_NAME,
         "Prompt type": PROMPT_TYPE,
-        "Prompt": PROMPT_TEXT,
-        "System message type": SYSTEM_MESSAGE_TYPE,
-        "Prompt system message": PROMPT_SYSTEM_MESSAGE,
-        "Answer system message": ANSWER_SYSTEM_MESSAGE,
+        "Prompt": COT_PROMPT,
+        "System message type": COT_SYS_MSG_TYPE,
+        "Prompt system message": COT_SYS_MSG,
+        "Answer system message": ANSWER_SYS_MSG,
         "Max rewrites": MAX_REWRITES,
         "Rewrite prompt"
         "Number of examples": total_examples,
@@ -268,10 +265,10 @@ async def main():
         "Task": TASK_NAME,
         "Model": MODEL_NAME,
         "Prompt type": PROMPT_TYPE,
-        "Prompt": PROMPT_TEXT,
-        "System message type": SYSTEM_MESSAGE_TYPE,
-        "Prompt system message": PROMPT_SYSTEM_MESSAGE,
-        "Answer system message": ANSWER_SYSTEM_MESSAGE,
+        "Prompt": COT_PROMPT,
+        "System message type": COT_SYS_MSG_TYPE,
+        "Prompt system message": COT_SYS_MSG,
+        "Answer system message": ANSWER_SYS_MSG,
         "Number of examples": total_examples,
         "Number of correct": int(results_df['correct'].sum()),
         "Accuracy": float(results_df['correct'].mean()),
@@ -324,7 +321,6 @@ if __name__ == '__main__':
                       'CoT-WS']
     system_message_choices = ['ChatGPT-default',
                               'instruct',
-                              'instruct-list',
                               'None']
     
     parser = argparse.ArgumentParser()
@@ -343,16 +339,16 @@ if __name__ == '__main__':
     TASK_NAME = args.task_name
     RUN_IDENTIFIER = args.run_identifier
     PROMPT_TYPE = args.prompt_type
-    SYSTEM_MESSAGE_TYPE = args.system_message_type
+    COT_SYS_MSG_TYPE = args.system_message_type
     NUM_EXAMPLES = 1E9 if args.num_examples == 'all' else int(args.num_examples)
     MAX_REWRITES = args.max_rewrites
     
     # For text completion models
     USE_ROLES = False
-    USE_SYSTEM_MESSAGES = False if SYSTEM_MESSAGE_TYPE == 'None' else True
+    USE_SYSTEM_MESSAGES = False if COT_SYS_MSG_TYPE == 'None' else True
     
     # Define the run name
-    FILE_NAME = f'{PROMPT_TYPE}__{SYSTEM_MESSAGE_TYPE}' + ('' if RUN_IDENTIFIER == '' else f'__{RUN_IDENTIFIER}')
+    FILE_NAME = f'{PROMPT_TYPE}__{COT_SYS_MSG_TYPE}' + ('' if RUN_IDENTIFIER == '' else f'__{RUN_IDENTIFIER}')
     FILE_NAME = FILE_NAME.replace('/', '-')
     
     # Make a directory in results for this run
@@ -365,32 +361,27 @@ if __name__ == '__main__':
     
     # Define prompt and system message text
     if PROMPT_TYPE == 'None':
-        PROMPT_TEXT = ""
+        COT_PROMPT = ""
     elif PROMPT_TYPE == 'CoT':
-        # PROMPT_TEXT = "Let's think about this step by step."
-        PROMPT_TEXT = "Let's think about this step by step, putting each step on a new row of a table with structure |Step Number|Step description|Change in world state or knowledge|"
+        COT_PROMPT = "Let's think about this step by step."
     elif PROMPT_TYPE == 'CoT-WS':
-        PROMPT_TEXT = "Let's think about this step by step and describe how the state of the world, any values, or our knowledge changes at each step."
-        # PROMPT_TEXT = "Let's think about this one step at a time, write concisely and put each step on a new row with structure: \"Step Number\tStep description\tList of available values after this step\""
+        COT_PROMPT = "Let's think about this step by step and describe how the state of the world, any values, or our knowledge changes at each step."
+        # COT_PROMPT = "Let's think about this one step at a time, write concisely and put each step on a new row with structure: \"Step Number\tStep description\tList of available values after this step\""
     
-    if SYSTEM_MESSAGE_TYPE == 'ChatGPT-default':
-        PROMPT_SYSTEM_MESSAGE = "You are a helpful assistant."
-    elif SYSTEM_MESSAGE_TYPE == 'instruct':
-        PROMPT_SYSTEM_MESSAGE = "You are an instruction following, problem solving assistant."
-        # PROMPT_SYSTEM_MESSAGE = "You are an instruction following, problem solving assistant. Do not do anything that is not explicitly instructed."
-    elif SYSTEM_MESSAGE_TYPE == 'instruct-list':
-        PROMPT_SYSTEM_MESSAGE = "You are an instruction following, problem solving assistant. Respond with lists \n1.\n2.\n3.\n..."
-    elif SYSTEM_MESSAGE_TYPE == 'None':
-        PROMPT_SYSTEM_MESSAGE = ""
+    if COT_SYS_MSG_TYPE == 'ChatGPT-default':
+        COT_SYS_MSG = "You are a helpful assistant."
+    elif COT_SYS_MSG_TYPE == 'instruct':
+        COT_SYS_MSG = "You are an instruction following, problem solving assistant."
+        COT_SYS_MSG = "You are an instruction following, problem solving assistant. Your responses are concise precise analytic. Do not give any response that is not explicitly requested."
+    elif COT_SYS_MSG_TYPE == 'None':
+        COT_SYS_MSG = ""
     
-    # ASK_REWRITE_MESSAGE = "Let's think about whether our previous solution is correct and decide if we should reattempt it. Do not explain the decision only respond yes to reattempt or no to terminate"
-    # ASK_REWRITE_MESSAGE = "Let's think about whether our previous solution is correct and decide if we should reattempt it. Explain your reasoning. Your response must finish with either the word yes to reattempt or no to terminate"
-    ASK_REWRITE_MESSAGE = "Validate your previous response, describing what if anything is wrong with your response. Do not give another solution You're answer could be correct, do not assume it is wrong. If youre answer is correct say so. Do not solve the problem again."
-    REWRITE_MESSAGE = "Write a new solution to the problem. Use the previous solution but correct any errors described in the previous response."
-    # REWRITE_SYSTEM_MESSAGE = PROMPT_SYSTEM_MESSAGE
-    EXTRACT_REWRITE_RESPONSE = True
+    VALIDATE_SYS_MSG = 'You are an instruction following, solution criticing assistant. You give concise analytic assessment of solutions. You do not attempt to solve problems yourself.'
+    VALIDATE_PROMPT = "Validate the solution above step by step describing what if anything is wrong with each step. Do not solve the problem. Concisely critique each step individually. Do not repeat the solution."
     
-    ANSWER_SYSTEM_MESSAGE = "You are an instruction following, problem solving agent. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer."
+    DECISION_PROMPT = "Decide whether to attempt the solution again, responding yes if you were incorrect or no if you were correct"
+        
+    ANSWER_SYS_MSG = "You are an instruction following, problem solving agent. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer."
     ANSWER_PROMPT_TEXT = get_task_answer_prompt(TASK_NAME)
     
     # Specifies the maximum number of concurrent requests to the OpenAI API

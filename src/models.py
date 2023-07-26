@@ -1,4 +1,4 @@
-from src import openai_utils, hf_inference_utils
+from src import openai_utils
 
 def structure_message(role:str, content:str) -> dict:
     if role not in {'system', 'user', 'assistant'}:
@@ -29,7 +29,7 @@ class GPTModel():
         
         query_messages = [self.system_message_dict, structure_message('user', content), self.prompt_message_dict]
         
-        if self.openai_model_type == 'chat':
+        if self.model_type == 'chat':
             response = await openai_utils.chat_with_backoff_async(model=self.model_name,
                                                       messages=query_messages,
                                                       temperature=self.temperature,
