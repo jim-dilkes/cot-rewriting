@@ -1,0 +1,27 @@
+{
+    "Task": "prontoqa",
+    "Model": "gpt-3.5-turbo",
+    "Prompt type": "CoT-WS",
+    "Prompt": "Let's think about this step by step and describe how the state of the world, any values, or our knowledge changes at each step.",
+    "System message type": "instruct",
+    "Prompt system message": "You are an instruction following, problem solving assistant.",
+    "Answer system message": "You are an instruction following, problem solving agent. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer.",
+    "Number of examples": 500,
+    "Number of correct": 343,
+    "Accuracy": 0.686,
+    "Cost": {
+        "Prompt": {
+            "Total": 0.43465050000000005,
+            "Per token": 0.0008693010000000001
+        },
+        "Completion": {
+            "Total": 0.253274,
+            "Per token": 0.000506548
+        },
+        "Total": {
+            "Total": 0.6879245,
+            "Per token": 0.0013758490000000002
+        },
+        "Currency": "USD"
+    }
+}

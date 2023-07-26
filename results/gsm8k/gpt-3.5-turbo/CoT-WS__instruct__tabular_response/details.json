@@ -1,0 +1,27 @@
+{
+    "Task": "gsm8k",
+    "Model": "gpt-3.5-turbo",
+    "Prompt type": "CoT-WS",
+    "Prompt": "Let's think about this one step at a time, write concisely and put each step on a new row with structure: \"Step Number\tStep description\tList of available values after this step\"",
+    "System message type": "instruct",
+    "Prompt system message": "You are an instruction following, problem solving assistant.",
+    "Answer system message": "You are an instruction following, problem solving agent. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer.",
+    "Number of examples": 20,
+    "Number of correct": 10,
+    "Accuracy": 0.5,
+    "Cost": {
+        "Prompt": {
+            "Total": 0.0161355,
+            "Per token": 0.000806775
+        },
+        "Completion": {
+            "Total": 0.010254,
+            "Per token": 0.0005126999999999999
+        },
+        "Total": {
+            "Total": 0.0263895,
+            "Per token": 0.001319475
+        },
+        "Currency": "USD"
+    }
+}

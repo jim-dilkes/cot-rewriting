@@ -1,0 +1,27 @@
+{
+    "Task": "gsm8k",
+    "Model": "gpt-3.5-turbo",
+    "Prompt type": "CoT-WS",
+    "Prompt": "Let's think about this step by step and describe how the state of the world, any values, or our knoweledge change at each step.",
+    "System message type": "instruct",
+    "Prompt system message": "You are an instruction following, problem solving assistant.",
+    "Answer system message": "You are an instruction following, problem solving agent. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer.",
+    "Number of examples": 500,
+    "Number of correct": 334,
+    "Accuracy": 0.668,
+    "Cost": {
+        "Prompt": {
+            "Total": 0.34869300000000003,
+            "Per token": 0.000697386
+        },
+        "Completion": {
+            "Total": 0.212914,
+            "Per token": 0.000425828
+        },
+        "Total": {
+            "Total": 0.561607,
+            "Per token": 0.001123214
+        },
+        "Currency": "USD"
+    }
+}

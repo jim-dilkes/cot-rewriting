@@ -7,20 +7,20 @@
     "Prompt system message": "You are an instruction following, problem solving assistant. Respond with lists \n1.\n2.\n3.\n...",
     "Answer system message": "You are an instruction following, problem solving agent. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer.",
     "Number of examples": 500,
-    "Number of correct": 0,
-    "Accuracy": 0.0,
+    "Number of correct": 349,
+    "Accuracy": 0.698,
     "Cost": {
         "Prompt": {
-            "Total": 0.2908215,
-            "Per token": 0.0005816430000000001
+            "Total": 0.290256,
+            "Per token": 0.000580512
         },
         "Completion": {
-            "Total": 0.154744,
-            "Per token": 0.00030948799999999996
+            "Total": 0.153992,
+            "Per token": 0.00030798399999999997
         },
         "Total": {
-            "Total": 0.4455655,
-            "Per token": 0.000891131
+            "Total": 0.444248,
+            "Per token": 0.0008884959999999999
         },
         "Currency": "USD"
     }

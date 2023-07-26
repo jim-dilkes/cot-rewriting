@@ -1,0 +1,27 @@
+{
+    "Task": "gsm8k",
+    "Model": "gpt-3.5-turbo",
+    "Prompt type": "CoT",
+    "Prompt": "Let's think about this step by step.",
+    "System message type": "instruct-list",
+    "Prompt system message": "You are an instruction following, problem solving assistant. Respond with lists \n1.\n2.\n3.\n...",
+    "Answer system message": "You are an instruction following, problem solving agent. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer.",
+    "Number of examples": 500,
+    "Number of correct": 352,
+    "Accuracy": 0.704,
+    "Cost": {
+        "Prompt": {
+            "Total": 0.3042855,
+            "Per token": 0.000608571
+        },
+        "Completion": {
+            "Total": 0.163706,
+            "Per token": 0.00032741199999999996
+        },
+        "Total": {
+            "Total": 0.4679915,
+            "Per token": 0.000935983
+        },
+        "Currency": "USD"
+    }
+}

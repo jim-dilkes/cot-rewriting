@@ -9,11 +9,11 @@ Chen et. al. (2023),gsm8k,ChatGPT (March 2023),None,0.758
 Chen et. al. (2023),gsm8k,ChatGPT (March 2023),CoT,0.744
 Chen et. al. (2023),gsm8k,GPT-3,Trigger words,0.104
 Chen et. al. (2023),gsm8k,GPT-3,CoT,0.407
-Chen et. al. (2023),coinflip,ChatGPT (March 2023),Trigger words,0.314
-Chen et. al. (2023),coinflip,ChatGPT (March 2023),None,0.200
-Chen et. al. (2023),coinflip,ChatGPT (March 2023),CoT,0.340
-Chen et. al. (2023),coinflip,GPT-3,Trigger words,0.128
-Chen et. al. (2023),coinflip,GPT-3,CoT,0.914
+Chen et. al. (2023),coinflip/four,ChatGPT (March 2023),Trigger words,0.314
+Chen et. al. (2023),coinflip/four,ChatGPT (March 2023),None,0.200
+Chen et. al. (2023),coinflip/four,ChatGPT (March 2023),CoT,0.340
+Chen et. al. (2023),coinflip/four,GPT-3,Trigger words,0.128
+Chen et. al. (2023),coinflip/four,GPT-3,CoT,0.914
 Wei et. al. (2022),coinflip/four,LaMDA-137B,CoT-1Shot,0.745
 Wei et. al. (2022),coinflip/four,LaMDA-68B,CoT-1Shot,0.596
 Wei et. al. (2022),coinflip/four,PaLM-62B,CoT-1Shot,0.724

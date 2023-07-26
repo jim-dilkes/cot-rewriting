@@ -1,0 +1,27 @@
+{
+    "Task": "tracking_shuffled_objects/three_objects",
+    "Model": "gpt-3.5-turbo",
+    "Prompt type": "CoT",
+    "Prompt": "Let's think about this step by step.",
+    "System message type": "instruct",
+    "Prompt system message": "You are an instruction following, problem solving assistant.",
+    "Answer system message": "You are an instruction following, problem solving agent. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer.",
+    "Number of examples": 100,
+    "Number of correct": 53,
+    "Accuracy": 0.53,
+    "Cost": {
+        "Prompt": {
+            "Total": 0.359673,
+            "Per token": 0.0035967300000000002
+        },
+        "Completion": {
+            "Total": 0.082526,
+            "Per token": 0.00082526
+        },
+        "Total": {
+            "Total": 0.442199,
+            "Per token": 0.00442199
+        },
+        "Currency": "USD"
+    }
+}

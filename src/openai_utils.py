@@ -59,14 +59,27 @@ class OpenAIChatMessages:
     def __init__(self):
         self.messages = []
     
-    def append(self, role, content):
+    def append(self, role, content):         
         self.messages.append(structure_message(role, content))
         
-    def prepend(self, role, content):
-        self.messages = [structure_message(role, content)].extend(self.messages)
+    
         
-    def get(self):
-        return self.messages
+    def format_single_prompt(self, join_char='\n', use_roles=False, use_system_messages=False):
+        # Format messages as a single prompt, using only the content joined by join_char
+        msgs = self.messages
+        if not use_system_messages:
+            msgs = [msg for msg in msgs if msg['role'] != 'system']
+            
+        if use_roles:
+            formatted_messages = join_char.join([f"{m['role']}: {m['content']}" for m in msgs])
+        else:
+            formatted_messages = join_char.join([m['content'] for m in msgs])
+        
+        return formatted_messages
+            
+        
+    def get(self, chat_model=True, join_char='\n', use_roles=False, use_system_messages=False):
+        return self.messages if chat_model else self.format_single_prompt()
         
     def reset(self):
         self.messages = []

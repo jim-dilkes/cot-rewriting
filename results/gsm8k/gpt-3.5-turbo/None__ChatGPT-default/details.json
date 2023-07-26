@@ -1,0 +1,27 @@
+{
+    "Task": "gsm8k",
+    "Model": "gpt-3.5-turbo",
+    "Prompt type": "None",
+    "Prompt": "",
+    "System message type": "ChatGPT-default",
+    "Prompt system message": "You are a helpful assistant.",
+    "Answer system message": "You are an instruction following, problem solving agent. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer.",
+    "Number of examples": 500,
+    "Number of correct": 385,
+    "Accuracy": 0.77,
+    "Cost": {
+        "Prompt": {
+            "Total": 0.2699685,
+            "Per token": 0.000539937
+        },
+        "Completion": {
+            "Total": 0.141918,
+            "Per token": 0.000283836
+        },
+        "Total": {
+            "Total": 0.4118865,
+            "Per token": 0.000823773
+        },
+        "Currency": "USD"
+    }
+}

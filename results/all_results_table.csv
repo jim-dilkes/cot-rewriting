@@ -1,0 +1,32 @@
+,,,,Accuracy,Accuracy,Accuracy,Accuracy,Accuracy
+Task,,,,coinflip/eight,coinflip/four,gsm8k,prontoqa,tracking_shuffled_objects/three_objects
+Paper,Model,Prompt type,System message type,,,,,
+Chen et. al. (2023),ChatGPT (March 2023),CoT,None,,0.34,0.744,,0.589
+Chen et. al. (2023),ChatGPT (March 2023),None,None,,0.2,0.758,,0.277
+Chen et. al. (2023),ChatGPT (March 2023),Trigger words,None,,0.314,0.44,,0.307
+Chen et. al. (2023),GPT-3,CoT,None,,0.914,0.407,,0.524
+Chen et. al. (2023),GPT-3,Trigger words,None,,0.128,0.104,,0.313
+Ours,gpt-3.5-turbo,CoT,ChatGPT-default,0.954,0.984,0.696,0.828,0.5146666666666667
+Ours,gpt-3.5-turbo,CoT,CoT-list,,0.518,,,0.4573333333333333
+Ours,gpt-3.5-turbo,CoT,instruct,0.972,0.99,0.632,0.824,0.5346666666666666
+Ours,gpt-3.5-turbo,CoT,instruct-list,0.944,,0.704,0.886,
+Ours,gpt-3.5-turbo,CoT-WS,ChatGPT-default,0.702,0.786,0.65,0.676,0.5906666666666667
+Ours,gpt-3.5-turbo,CoT-WS,CoT-list,,0.928,,,0.6026666666666667
+Ours,gpt-3.5-turbo,CoT-WS,instruct,0.68,0.894,0.668,0.686,0.6133333333333333
+Ours,gpt-3.5-turbo,CoT-WS,instruct-list,0.934,,0.63,0.696,
+Ours,gpt-3.5-turbo,None,ChatGPT-default,0.478,0.418,0.77,0.922,0.3173333333333333
+Ours,gpt-3.5-turbo,None,CoT-list,,0.58,,,0.3106666666666666
+Ours,gpt-3.5-turbo,None,instruct,0.482,0.504,0.728,0.926,0.3306666666666666
+Ours,gpt-3.5-turbo,None,instruct-list,0.546,,0.698,0.888,
+Wei et. al. (2022),GPT-3 (text-davinci-002),CoT-1Shot,None,,,0.469,,
+Wei et. al. (2022),GPT-3 (text-davinci-002),None,None,,,0.156,,
+Wei et. al. (2022),LaMDA-137B,CoT-1Shot,None,,0.745,0.143,,
+Wei et. al. (2022),LaMDA-137B,None,None,,0.491,0.065,,
+Wei et. al. (2022),LaMDA-68B,CoT-1Shot,None,,0.596,0.082,,
+Wei et. al. (2022),LaMDA-68B,None,None,,0.509,0.057,,
+Wei et. al. (2022),PaLM-540B,CoT-1Shot,None,,0.902,0.569,,
+Wei et. al. (2022),PaLM-540B,None,None,,0.548,0.179,,
+Wei et. al. (2022),PaLM-62B,CoT-1Shot,None,,0.724,0.299,,
+Wei et. al. (2022),PaLM-62B,None,None,,0.383,0.096,,
+Wei et. al. (2022),UL2-20B,CoT-1Shot,None,,0.504,0.044,,
+Wei et. al. (2022),UL2-20B,None,None,,0.522,0.041,,

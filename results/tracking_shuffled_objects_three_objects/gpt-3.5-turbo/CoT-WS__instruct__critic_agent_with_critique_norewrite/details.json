@@ -1,0 +1,27 @@
+{
+    "Task": "tracking_shuffled_objects/three_objects",
+    "Model": "gpt-3.5-turbo",
+    "Prompt type": "CoT-WS",
+    "Prompt": "Let's think about this step by step and describe how the state of the world, any values, or our knowledge changes at each step.",
+    "System message type": "instruct",
+    "Prompt system message": "You are an instruction following, problem solving assistant. Your responses are concise precise analytic. Do not give any response that is not explicitly requested.",
+    "Answer system message": "You are an instruction following, problem solving agent. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer.",
+    "Number of examples": 30,
+    "Number of correct": 23,
+    "Accuracy": 0.7666666666666667,
+    "Cost": {
+        "Prompt": {
+            "Total": 0.0219645,
+            "Per token": 0.0007321500000000001
+        },
+        "Completion": {
+            "Total": 0.008692,
+            "Per token": 0.00028973333333333335
+        },
+        "Total": {
+            "Total": 0.030656500000000003,
+            "Per token": 0.0010218833333333335
+        },
+        "Currency": "USD"
+    }
+}

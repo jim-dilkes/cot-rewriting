@@ -1,0 +1,27 @@
+{
+    "Task": "prontoqa",
+    "Model": "gpt-3.5-turbo",
+    "Prompt type": "None",
+    "Prompt": "",
+    "System message type": "ChatGPT-default",
+    "Prompt system message": "You are a helpful assistant.",
+    "Answer system message": "You are an instruction following, problem solving agent. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer.",
+    "Number of examples": 500,
+    "Number of correct": 461,
+    "Accuracy": 0.922,
+    "Cost": {
+        "Prompt": {
+            "Total": 0.21822600000000003,
+            "Per token": 0.00043645200000000004
+        },
+        "Completion": {
+            "Total": 0.019876,
+            "Per token": 3.9752e-05
+        },
+        "Total": {
+            "Total": 0.23810200000000004,
+            "Per token": 0.0004762040000000001
+        },
+        "Currency": "USD"
+    }
+}

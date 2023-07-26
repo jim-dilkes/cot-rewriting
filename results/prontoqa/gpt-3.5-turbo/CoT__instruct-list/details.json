@@ -1,0 +1,27 @@
+{
+    "Task": "prontoqa",
+    "Model": "gpt-3.5-turbo",
+    "Prompt type": "CoT",
+    "Prompt": "Let's think about this step by step.",
+    "System message type": "instruct-list",
+    "Prompt system message": "You are an instruction following, problem solving assistant. Respond with lists \n1.\n2.\n3.\n...",
+    "Answer system message": "You are an instruction following, problem solving agent. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer.",
+    "Number of examples": 500,
+    "Number of correct": 443,
+    "Accuracy": 0.886,
+    "Cost": {
+        "Prompt": {
+            "Total": 0.347004,
+            "Per token": 0.000694008
+        },
+        "Completion": {
+            "Total": 0.16758,
+            "Per token": 0.00033516000000000004
+        },
+        "Total": {
+            "Total": 0.5145839999999999,
+            "Per token": 0.0010291679999999998
+        },
+        "Currency": "USD"
+    }
+}
