@@ -1,5 +1,5 @@
 {
-    "prompt_strategy_class": "PromptWithAnswerExtraction",
+    "class": "SolveValidateRewrite",
     "models": {
         "cot_generator": {
             "model_name": "gpt-3.5-turbo",
