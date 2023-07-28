@@ -13,7 +13,6 @@ import logging
 
 """ TASK SPECIFIC CODE """
 
-
 # Task specific prompt to generate the correct answer string using the CoT solution
 def get_task_answer_prompt(task_name):
     if task_name == "gsm8k":
@@ -77,6 +76,7 @@ async def main():
 
     prompt_strategy = create_prompt_strategy_class(MODELS_DEFNS)
     
+    
     ## GENERATE ASYNC TASKS AND RUN
     tasks = [
         prompt_strategy.proc_example(example, i, SEMAPHORE)
@@ -88,6 +88,7 @@ async def main():
     # Extract answers
     cot_responses, pred_answers, inputs_outputs = zip(*results)
     final_answers = [a[-1] for a in pred_answers]
+
 
     #### RECORD RESULTS ####
 
@@ -263,7 +264,7 @@ if __name__ == "__main__":
     )
     # RUN_DIR = RUN_DIR.replace("/", "-")
 
-    # Make a directory in results and .logs for this run
+    # Make a directory in results for this run
     results_dir = (
         f"./results/{TASK_NAME.replace('/','_')}"
     )
