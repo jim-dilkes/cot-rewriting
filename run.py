@@ -2,7 +2,6 @@ import string, os, json, sys, shutil
 import argparse
 import random
 
-import src.data_utils as data_utils
 import src.task_utils as task_utils
 from src.models import GPTModel
 
