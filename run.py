@@ -3,6 +3,7 @@ import argparse
 import random
 
 import src.data_utils as data_utils
+import src.task_utils as task_utils
 from src.models import GPTModel
 
 import pandas as pd
@@ -11,49 +12,10 @@ import asyncio
 import logging
 
 
-""" TASK SPECIFIC CODE """
-
-# Task specific prompt to generate the correct answer string using the CoT solution
-def get_task_answer_prompt(task_name):
-    if task_name == "gsm8k":
-        return "Respond with a single value that is the answer to the problem. Do not explain your answer or include symbols"
-    elif task_name[: len("tracking_shuffled_objects")] == "tracking_shuffled_objects":
-        return "Respond with the correct completion of the problem statement. Do not include names. Give only the entity that completes the final sentence."
-    elif task_name[: len("coinflip")] == "coinflip":
-        return "Respond with the final state of the coin. Do not explain your answer only use heads or tails"
-    elif task_name == "strategyqa":
-        return "Respond with the answer to the question. Do not explain your answer only use yes or no"
-    elif task_name == "prontoqa":
-        return "Respond with the answer to the question. Do not explain your answer only use true or false"
-    else:
-        raise ValueError(f"Unknown benchmark name: {task_name}")
-
-
-# Task data load
-def load_task(task_name, task_dir):
-    if task_name == "gsm8k":
-        questions, answers = data_utils.load_gsm8k("test.jsonl", filedir=task_dir)
-    elif (
-        task_name == "strategyqa"
-        or task_name[: len("tracking_shuffled_objects")] == "tracking_shuffled_objects"
-    ):
-        questions, answers = data_utils.load_bigbench("task.json", filedir=task_dir)
-    elif task_name[: len("coinflip")] == "coinflip":
-        questions, answers = data_utils.load_coinflip("task.csv", filedir=task_dir)
-    elif task_name == "prontoqa":
-        questions, answers = data_utils.load_prontoqa(
-            "345hop_random_true.json", filedir=task_dir
-        )
-    else:
-        raise ValueError(f"Unknown benchmark name: {task_name}")
-
-    return questions, answers
-
-
 async def main():
     
     #### LOAD DATA ####    
-    task_texts, task_answers = load_task(TASK_NAME, f"data/{TASK_NAME}")
+    task_texts, task_answers = task_utils.load_task(TASK_NAME, f"data/{TASK_NAME}")
 
     task_texts_sample = (
         random.sample(task_texts, NUM_EXAMPLES)
@@ -255,7 +217,7 @@ if __name__ == "__main__":
         models_defns_json["kwargs"] if "kwargs" in models_defns_json else {}
     )
     MODELS_DEFNS = models_defns_json["models"]
-    MODELS_DEFNS["answer_extractor"]["prompt"] = get_task_answer_prompt(TASK_NAME)
+    MODELS_DEFNS["answer_extractor"]["prompt"] = task_utils.get_task_answer_prompt(TASK_NAME)
 
 
     # Define the complete run dir for results and logs
