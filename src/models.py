@@ -5,13 +5,21 @@ def structure_message(role:str, content:str) -> dict:
         raise ValueError(f"Unknown chat role: {role}")
     return {'role': role, 'content': content}
 
+
+def get_model(model_name:str, **kwargs):
+    if model_name in {'gpt-3.5-turbo'}:
+        return GPTModel(model_name=model_name, **kwargs)
+    else:
+        raise ValueError(f"Unknown model name: {model_name}")
+
+
 class GPTModel():
-    def __init__(self, model_name:str, system_message=None, prompt_message=None, temperature=0.7, max_tokens=256):
+    def __init__(self, model_name:str, system_message=None, prompt=None, temperature=0.7, max_tokens=256):
         self.model_name = model_name
         self.tokenizer = openai_utils.get_tokenizer(model_name)
         
         self.system_message_dict = structure_message('system', system_message) # System message to prepend to all queries
-        self.prompt_message_dict = structure_message('user', prompt_message) # Prompt message to append to all queries
+        self.prompt_message_dict = structure_message('user', prompt) # Prompt message to append to all queries
         
         self.temperature = temperature
         self.max_tokens = max_tokens
