@@ -247,7 +247,7 @@ if __name__ == "__main__":
         help="The number of times the solution may be rewritten. 0 means no rewriting.",
     )
     parser.add_argument(
-        "--model_defns_file", type=str, default="prompt_answer_extraction"
+        "--model_defns_file", type=str, default="PromptWithAnswerExtraction/cot_instruct"
     )
     parser.add_argument(
         "--overwrite_results",
@@ -268,12 +268,12 @@ if __name__ == "__main__":
 
     ## Model Definitions Config File Import
     models_dir = "models_defns"
-    models_filename = args.model_defns_file
+    models_file = args.model_defns_file
     # remove .json from filename if present
-    if models_filename[-5:] == ".json":
-        models_filename = models_filename[:-5]
-    models_file = os.path.join(models_dir, f"{models_filename}.json")
-    models_defns_json = json.load(open(models_file, "r"))
+    if models_file[-5:] == ".json":
+        models_file = models_file[:-5]
+        
+    models_defns_json = json.load(open(os.path.join(models_dir, f"{models_file}.json"), "r"))
     PROMPT_STRATEGY_CLASS = models_defns_json["class"]
     PROMPT_STRATEGY_KWARGS = (
         models_defns_json["kwargs"] if "kwargs" in models_defns_json else {}
@@ -281,17 +281,18 @@ if __name__ == "__main__":
     MODELS_DEFNS = models_defns_json["models"]
     MODELS_DEFNS["answer_extractor"]["prompt"] = get_task_answer_prompt(TASK_NAME)
 
-    # Define the complete run name
-    FILE_NAME = f"{PROMPT_TYPE}__{PROMPT_STRATEGY_CLASS}" + (
+
+    # Define the complete run dir for results and logs
+    RUN_DIR = f"{models_file}" + (
         "" if RUN_IDENTIFIER == "" else f"__{RUN_IDENTIFIER}"
     )
-    FILE_NAME = FILE_NAME.replace("/", "-")
+    # RUN_DIR = RUN_DIR.replace("/", "-")
 
     # Make a directory in results and .logs for this run
     results_dir = (
-        f"./results/{TASK_NAME.replace('/','_')}/{MODEL_NAME.replace('/','_')}"
+        f"./results/{TASK_NAME.replace('/','_')}"
     )
-    RESULTS_DIR = os.path.join(results_dir, FILE_NAME)
+    RESULTS_DIR = os.path.join(results_dir, RUN_DIR)
     if not os.path.exists(RESULTS_DIR):
         os.makedirs(RESULTS_DIR)
     else:
@@ -306,7 +307,9 @@ if __name__ == "__main__":
     ## SET UP LOGGING ##
 
     # Always overwrite the logs directory
-    logs_dir = f"./.logs/{TASK_NAME.replace('/','_')}/{MODEL_NAME.replace('/','_')}"
+    logs_dir = f"./.logs/{TASK_NAME.replace('/','_')}"
+    log_subdir, log_file = os.path.split(RUN_DIR)
+    logs_dir = os.path.join(logs_dir, log_subdir)
     if os.path.exists(logs_dir):
         shutil.rmtree(logs_dir)
     os.makedirs(logs_dir)
@@ -316,7 +319,7 @@ if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
 
     # Create a file handler
-    log_file = f"{logs_dir}/{FILE_NAME}.log"
+    log_file = os.path.join(logs_dir, f"{log_file}.log")
     file_handler = logging.FileHandler(log_file)
     file_handler.setLevel(logging.DEBUG)  # file handler handles all messages
 
