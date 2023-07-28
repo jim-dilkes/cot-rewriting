@@ -208,25 +208,12 @@ if __name__ == "__main__":
         "prontoqa",
     ]
 
-    model_apis = {"gpt-3.5-turbo": "openai"}
-    model_choices = model_apis.keys()
-
-    prompt_choices = ["None", "CoT", "CoT-WS"]
-    system_message_choices = ["ChatGPT-default", "instruct", "None"]
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--task_name", type=str, default="gsm8k", help="", choices=task_choices
     )
     parser.add_argument(
-        "--model_name",
-        type=str,
-        default="gpt-3.5-turbo",
-        help="",
-        choices=model_choices,
-    )
-    parser.add_argument(
-        "--prompt_type", type=str, default="CoT", help="", choices=prompt_choices
+        "--model_defns_file", type=str, default="PromptWithAnswerExtraction/cot_instruct", help="Config file patha and name inside ./models_defns"
     )
     parser.add_argument(
         "--run_identifier", type=str, default="", help="Used in file names"
@@ -241,29 +228,17 @@ if __name__ == "__main__":
         help="Maximum number of concurrent requests to APIs",
     )
     parser.add_argument(
-        "--max_rewrites",
-        type=int,
-        default=0,
-        help="The number of times the solution may be rewritten. 0 means no rewriting.",
-    )
-    parser.add_argument(
-        "--model_defns_file", type=str, default="PromptWithAnswerExtraction/cot_instruct"
-    )
-    parser.add_argument(
         "--overwrite_results",
         action="store_true",
-        help="Overwrite results directory if it exists",
+        help="Overwrite results and logs directory if they exists",
     )
 
 
     ## Parse arguments
     args = parser.parse_args()
-    MODEL_NAME = args.model_name
     TASK_NAME = args.task_name
     RUN_IDENTIFIER = args.run_identifier
-    PROMPT_TYPE = args.prompt_type
     NUM_EXAMPLES = 1e9 if args.num_examples == "all" else int(args.num_examples)
-    MAX_REWRITES = args.max_rewrites
 
 
     ## Model Definitions Config File Import
