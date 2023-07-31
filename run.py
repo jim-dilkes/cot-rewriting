@@ -1,4 +1,4 @@
-import string, os, json, sys, shutil
+import string, os, json, sys, shutil, time
 import argparse
 import random
 
@@ -54,65 +54,18 @@ async def main():
     #### RECORD RESULTS ####
 
     ## Record the results of each example as a table
-    results_df = pd.DataFrame(
-        columns=[
-            "index",
-            "question",
-            "cot_response",
-            "pred_answer",
-            "true_answer",
-            "correct",
-        ]
-    )
-    results_df["index"] = range(total_examples)
-    results_df["question"] = task_texts_sample
-    results_df["cot_response"] = cot_responses
-    true_answers_procd = [
-        str(a).lower().translate(str.maketrans("", "", string.punctuation))
-        for a in task_answers_sample
-    ]
-    results_df["true_answer"] = true_answers_procd
-    results_df["pred_answer"] = final_answers
-    results_df["all_answers"] = pred_answers
-    results_df["correct"] = results_df["true_answer"] == results_df["pred_answer"]
-    results_df["correct"] = results_df["correct"].astype(int)
+    results_df = pd.DataFrame({
+        "index": range(total_examples),
+        "question": task_texts_sample,
+        "cot_response": cot_responses,
+        "true_answer": [str(a).lower().translate(str.maketrans("", "", string.punctuation)) for a in task_answers_sample],
+        "pred_answer": final_answers,
+        "all_answers": pred_answers,
+        "io": inputs_outputs,
+    })
+    results_df["correct"] = [int(x) for x in (results_df["true_answer"] == results_df["pred_answer"]).tolist()]
 
-    results_df.to_csv(
-        os.path.join(RESULTS_DIR, "answers.tsv"), quotechar='"', sep="\t", index=False
-    )
-    results_df["io"] = inputs_outputs
-
-    ## Record the results to a JSON file
     df_dict_list = results_df.to_dict("records")
-    processed_dict_list = []
-    for item in df_dict_list:
-        new_item = {}
-
-        # Copy the existing fields
-        new_item["example_idx"] = item["index"]
-        new_item["question"] = item["question"]
-        new_item["true_answer"] = item["true_answer"]
-        new_item["predicted_answer"] = item["pred_answer"]
-        new_item["correct"] = item["correct"] == 1
-
-        # Zip the 'cot_response' and 'answers' fields together
-        response_pairs = [
-            {"cot_response": c, "answer": a}
-            for c, a in zip(item["cot_response"], item["all_answers"])
-        ]
-
-        # Store the zipped list and its length
-        new_item["response_pairs"] = response_pairs
-        new_item["response_count"] = len(response_pairs)
-
-        new_item["queries"] = []
-        for j, io in enumerate(zip(item["io"][0], item["io"][1])):
-            new_item["queries"].append(
-                {"query_idx": j, "input": io[0], "output": io[1]}
-            )
-
-        # Add the new item to the list
-        processed_dict_list.append(new_item)
 
     # Calculate costs
     total_prompt_cost = 0  # cot_model.prompts_cost() + answer_model.prompts_cost()
@@ -121,12 +74,11 @@ async def main():
     )
     total_cost = total_prompt_cost + total_completion_cost
 
-    ## Record experiment details to a JSON file
-    # Generate the run details data structure with full model query and response history
     details = {
         "Task": TASK_NAME,
         "Prompt strategy": PROMPT_STRATEGY_CLASS,
         "Prompt strategy kwargs": PROMPT_STRATEGY_KWARGS,
+        "Date": time.strftime("%Y-%m-%d", time.localtime()),
         "Number of examples": total_examples,
         "Number of correct": int(results_df["correct"].sum()),
         "Accuracy": float(results_df["correct"].mean()),
@@ -146,7 +98,19 @@ async def main():
             },
             "Currency": "USD",
         },
-        "Examples": processed_dict_list
+        "Examples": [
+            {
+                "example_idx": item["index"],
+                "question": item["question"],
+                "true_answer": item["true_answer"],
+                "predicted_answer": item["pred_answer"],
+                "correct": item["correct"] == 1,
+                "response_pairs": [{"cot_response": c, "answer": a} for c, a in zip(item["cot_response"], item["all_answers"])],
+                "response_count": len(item["all_answers"]),
+                "queries": [{"query_idx": j, "input": io[0], "output": io[1]} for j, io in enumerate(zip(item["io"][0], item["io"][1]))]
+            }
+            for item in df_dict_list
+        ]
     }
     
     with open(os.path.join(RESULTS_DIR, "results.json"), "w") as f:
@@ -241,6 +205,7 @@ if __name__ == "__main__":
             raise ValueError(f"Run directory already exists: {RESULTS_DIR}")
 
 
+
     ## SET UP LOGGING ##
 
     # Always overwrite the logs directory
@@ -276,7 +241,9 @@ if __name__ == "__main__":
     logger.addHandler(stream_handler)
 
 
+
     ## SET UP ASYNCIO ##
+    
     # Specifies the maximum number of concurrent requests to the OpenAI API
     MAX_CONCURRENT_REQUESTS = (
         args.async_concurr
