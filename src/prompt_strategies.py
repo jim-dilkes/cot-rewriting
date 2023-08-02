@@ -41,7 +41,7 @@ class PromptStrategy(ABC):
         models = {}
         for model_tag in self.required_model_tags:
             try:
-                model_inputs = model_messages_json[model_tag]
+                model_inputs = model_messages_json[model_tag].copy()
             except KeyError as e:
                 raise KeyError(
                     f"Model tag {model_tag} required for {self.__class__.__name__} prompt strategy"
