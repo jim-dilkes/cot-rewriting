@@ -140,7 +140,7 @@ if __name__ == "__main__":
         "strategyqa",
         "prontoqa",
         "gaokao-physics",
-        "logicqa-en",
+        "logiqa-en",
         "lsat-ar"
     ]
 
