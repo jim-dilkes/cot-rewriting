@@ -78,6 +78,7 @@ async def main():
         "Task": TASK_NAME,
         "Prompt strategy": PROMPT_STRATEGY_CLASS,
         "Prompt strategy kwargs": PROMPT_STRATEGY_KWARGS,
+        "Run identifier": RUN_IDENTIFIER,
         "Date": time.strftime("%Y-%m-%d", time.localtime()),
         "Number of examples": total_examples,
         "Number of correct": int(results_df["correct"].sum()),
@@ -97,8 +98,13 @@ async def main():
                 "Per token": total_cost / total_examples,
             },
             "Currency": "USD",
-        },
-        "Examples": [
+        }
+    }
+    
+    with open(os.path.join(RESULTS_DIR, "details.json"), "w") as f:
+        json.dump(details, f, indent=4)
+
+    examples_json =  [
             {
                 "example_idx": item["index"],
                 "question": item["question"],
@@ -111,7 +117,8 @@ async def main():
             }
             for item in df_dict_list
         ]
-    }
+
+    details["examples"] = examples_json
     
     with open(os.path.join(RESULTS_DIR, "results.json"), "w") as f:
         json.dump(details, f, indent=4)
@@ -131,8 +138,7 @@ if __name__ == "__main__":
         "coinflip/four",
         "coinflip/eight",
         "strategyqa",
-        "prontoqa",
-    ]
+        "prontoqa"]
 
     parser = argparse.ArgumentParser()
     parser.add_argument(

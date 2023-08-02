@@ -166,3 +166,4 @@ data/tracking_shuffled_objects/*
 data/prontoqa/*
 
 .vscode/*
+.archive/*
