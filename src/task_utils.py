@@ -2,6 +2,7 @@ import json
 import os
 import csv
 
+AGIEVAL_TASKS = ['gaokao-physics','logicqa-en','lsat-ar']
 
 # Task specific prompt to generate the correct answer string using the CoT solution
 def get_task_answer_prompt(task_name):
@@ -15,6 +16,8 @@ def get_task_answer_prompt(task_name):
         return "Respond with the answer to the question. Do not explain your answer only use yes or no"
     elif task_name == "prontoqa":
         return "Respond with the answer to the question. Do not explain your answer only use true or false"
+    elif task_name in AGIEVAL_TASKS:
+        return "Respond with the multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E"
     else:
         raise ValueError(f"Unknown benchmark name: {task_name}")
 
@@ -32,6 +35,8 @@ def load_task(task_name, task_dir):
         questions, answers = load_coinflip("task.csv", filedir=task_dir)
     elif task_name == "prontoqa":
         questions, answers = load_prontoqa("345hop_random_true.json", filedir=task_dir)
+    elif task_name in AGIEVAL_TASKS:
+        questions, answers = load_agieval("task.jsonl", filedir=task_dir)
     else:
         raise ValueError(f"Unknown benchmark name: {task_name}")
 
@@ -104,4 +109,19 @@ def load_prontoqa(filename, filedir):
             answers.append(sub_ex["answer"])
 
     print(f"{len(questions)} prontoqa examples loaded from {file_path}")
+    return questions, answers
+
+def load_agieval(filename, filedir):
+    file_path = os.path.join(filedir, filename)
+    with open(file_path, "r") as f:
+        examples = [json.loads(l) for l in f]
+
+    for ex in examples:
+        ex.update(question=ex["passage"] + "\n\n" + ex["question"] + "\n\n" + "\n".join(ex['options']))
+        ex.update(answer=ex["label"])
+
+    questions = [ex["question"] for ex in examples]
+    answers = [ex["answer"] for ex in examples]
+
+    print(f"{len(questions)} AGIEval examples loaded from {file_path}")
     return questions, answers

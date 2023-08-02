@@ -138,7 +138,11 @@ if __name__ == "__main__":
         "coinflip/four",
         "coinflip/eight",
         "strategyqa",
-        "prontoqa"]
+        "prontoqa",
+        "gaokao-physics",
+        "logicqa-en",
+        "lsat-ar"
+    ]
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
