@@ -76,6 +76,7 @@ async def main():
 
     details = {
         "Task": TASK_NAME,
+        "Models file": MODELS_FILENAME,
         "Prompt strategy": PROMPT_STRATEGY_CLASS,
         "Prompt strategy kwargs": PROMPT_STRATEGY_KWARGS,
         "Run identifier": RUN_IDENTIFIER,
@@ -180,6 +181,8 @@ if __name__ == "__main__":
     ## Model Definitions Config File Import
     models_dir = "models_defns"
     models_file = args.model_defns_file
+    MODELS_FILENAME = models_file.split("/")[-1]
+    
     # remove .json from filename if present
     if models_file[-5:] == ".json":
         models_file = models_file[:-5]
