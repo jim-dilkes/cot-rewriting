@@ -1,0 +1,48 @@
+{
+    "Task": "prontoqa",
+    "Prompt strategy": "GoalExtraction",
+    "Prompt strategy kwargs": {},
+    "Run identifier": "stg2_goal",
+    "Date": "2023-08-03",
+    "Number of examples": 250,
+    "Number of correct": 219,
+    "Accuracy": 0.876,
+    "Models": {
+        "goal_extractor": {
+            "model_name": "gpt-3.5-turbo",
+            "system_message": "You are an instruction following, problem solving assistant.",
+            "prompt": "Answer these questions with very short bulletpoints:\n- What is the goal of this problem?\n- What type of answer is expected?",
+            "temperature": 0,
+            "max_tokens": 126
+        },
+        "cot_generator": {
+            "model_name": "gpt-3.5-turbo",
+            "system_message": "You are an instruction following, problem solving assistant.",
+            "prompt": "Lets complete this goal by thinking step by step",
+            "temperature": 0,
+            "max_tokens": 512
+        },
+        "answer_extractor": {
+            "model_name": "gpt-3.5-turbo",
+            "system_message": "You are an instruction following agent. Only respond with the exact answer. Do not explain your answer. Do not respond with sentences. Give exactly one answer.",
+            "prompt": "Respond with the answer to the question. Do not explain your answer only use true or false",
+            "temperature": 0,
+            "max_tokens": 32
+        }
+    },
+    "Cost": {
+        "Prompt": {
+            "Total": 0,
+            "Per token": 0.0
+        },
+        "Completion": {
+            "Total": 0,
+            "Per token": 0.0
+        },
+        "Total": {
+            "Total": 0,
+            "Per token": 0.0
+        },
+        "Currency": "USD"
+    }
+}

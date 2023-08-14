@@ -1,18 +1,23 @@
-# code: gpt4
+# code: adapted from gpt4
 import os
 import json
 import pandas as pd
+import argparse
 
 def get_all_json_files(dir_name):
     # Traverse through all subdirectories and get all details.json files
     json_files = []
     for root, dirs, files in os.walk(dir_name):
-        for file in files:
-            if file == "details.json":
-                json_files.append(os.path.join(root, file))
+        json_files.extend(
+            os.path.join(root, file)
+            for file in files
+            if file == "details.json"
+        )
     return json_files
 
+
 def compile_data(json_files):
+    old_models_keys = ['Prompt','Prompt system message','Answer system message']
     data = []
     for file in json_files:
         with open(file, 'r') as f:
@@ -21,6 +26,9 @@ def compile_data(json_files):
             if not isinstance(contents, list):
                 contents = [contents]
             for content in contents:
+                # Handle model details from old details.json files
+                old_models_items = [content.pop(key) for key in old_models_keys if key in content]
+                content['Models'] = old_models_items or None
                 # Flatten cost into main dict
                 cost_data = content.pop('Cost')
                 for cost_type, cost_values in cost_data.items():
@@ -35,7 +43,12 @@ def compile_data(json_files):
     return data
 
 def main():
-    json_files = get_all_json_files('.')
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--results_dir", type=str, default=".", help="")
+    args = parser.parse_args()
+    
+    json_files = get_all_json_files(args.results_dir)
     data = compile_data(json_files)
     df = pd.DataFrame(data)
 
@@ -45,7 +58,7 @@ def main():
             df[col] = df[col].apply(lambda x: x.replace('\n', '\\n') if isinstance(x, str) else x)
 
     # Save dataframe to csv
-    df.to_csv('all_results.csv', index=False)
+    df.to_csv(os.path.join(args.results_dir,"all_results.csv"), index=False)
 
 if __name__ == "__main__":
     main()

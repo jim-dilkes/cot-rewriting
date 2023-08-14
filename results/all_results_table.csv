@@ -8,11 +8,11 @@ Chen et. al. (2023),GPT-3,CoT,None,,0.914,0.407,,0.524
 Chen et. al. (2023),GPT-3,Trigger words,None,,0.128,0.104,,0.313
 Ours,gpt-3.5-turbo,CoT,ChatGPT-default,0.954,0.984,0.696,0.828,0.5146666666666667
 Ours,gpt-3.5-turbo,CoT,CoT-list,,0.518,,,0.4573333333333333
-Ours,gpt-3.5-turbo,CoT,instruct,0.972,0.99,0.632,0.824,0.5346666666666666
+Ours,gpt-3.5-turbo,CoT,instruct,0.972,0.99,1.432,0.824,3.6496666666666666
 Ours,gpt-3.5-turbo,CoT,instruct-list,0.944,,0.704,0.886,
 Ours,gpt-3.5-turbo,CoT-WS,ChatGPT-default,0.702,0.786,0.65,0.676,0.5906666666666667
 Ours,gpt-3.5-turbo,CoT-WS,CoT-list,,0.928,,,0.6026666666666667
-Ours,gpt-3.5-turbo,CoT-WS,instruct,0.68,0.894,0.668,0.686,0.6133333333333333
+Ours,gpt-3.5-turbo,CoT-WS,instruct,0.68,0.894,3.0613333333333332,0.686,5.013333333333334
 Ours,gpt-3.5-turbo,CoT-WS,instruct-list,0.934,,0.63,0.696,
 Ours,gpt-3.5-turbo,None,ChatGPT-default,0.478,0.418,0.77,0.922,0.3173333333333333
 Ours,gpt-3.5-turbo,None,CoT-list,,0.58,,,0.3106666666666666
