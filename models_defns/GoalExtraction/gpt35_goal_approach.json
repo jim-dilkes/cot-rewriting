@@ -1,19 +1,28 @@
 {
-    "class": "PromptWithAnswerExtraction",
+    "class": "GoalExtraction",
     "models": {
+        "goal_extractor": {
+            "model_name": "gpt-3.5-turbo",
+            "system_message": "You are an instruction following, problem solving assistant.",
+            "prompt": "Concisely state the goal of this problem. State how you would approach this problem.",
+            "temperature": 0,
+            "max_tokens": 126
+        },
         "cot_generator": {
             "model_name": "gpt-3.5-turbo",
             "system_message": "You are an instruction following, problem solving assistant.",
-            "prompt": "Let's think about this step by step.",
+            "prompt": "Complete the goal using the described approach.",
             "temperature": 0,
             "max_tokens": 512
         },
         "answer_extractor": {
             "model_name": "gpt-3.5-turbo",
             "system_message": "You are an instruction following agent. Only respond with the exact answer. Do not explain your answer. Do not respond with sentences. Give exactly one answer.",
-            "prompt": "######## Task specific prompt must replace this text ########",
+            "prompt": "{REPLACE WITH TASK SPECIFIC PROMPT}",
             "temperature": 0,
             "max_tokens": 32
         }
     }
 }
+
+

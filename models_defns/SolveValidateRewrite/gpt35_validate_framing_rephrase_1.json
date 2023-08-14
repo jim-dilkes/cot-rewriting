@@ -28,9 +28,9 @@
         "decider": {
             "model_name": "gpt-3.5-turbo",
             "system_message": "You are an instruction following, problem solving agent. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer.",
-            "prompt": "Decide whether to attempt the solution again, responding yes if you were incorrect or no if you were correct",
+            "prompt": "Does this validation suggest that the answer is correct? If it is uncertain or ambiguous, reply No. Give a Yes/No response",
             "temperature": 0,
-            "max_tokens": 32
+            "max_tokens": 1
         }
     }
 }

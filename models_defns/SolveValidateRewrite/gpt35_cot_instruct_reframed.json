@@ -7,8 +7,8 @@
         "cot_generator": {
             "model_name": "gpt-3.5-turbo",
             "system_message": "You are an instruction following, problem solving assistant.",
-            "prompt": "Let's think about this step by step.",
-            "temperature": 0.7,
+            "prompt": "Let's think about this step by step, putting each step in a new bullet point:\n- Do <>\n- Do <>\n- Do <>",
+            "temperature": 0,
             "max_tokens": 512
         },
         "answer_extractor": {
