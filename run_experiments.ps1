@@ -1,36 +1,32 @@
-$taskChoices =  "gsm8k"
-            # "gsm8k",
+$taskChoices =  
+            #"tracking_shuffled_objects/three_objects",
+            "gsm8k"
             #    "tracking_shuffled_objects/three_objects",
             #    "tracking_shuffled_objects/five_objects",
             #    "tracking_shuffled_objects/seven_objects",
-            #    "coinflip/four",
+            #    "coinflip/eight",
             #    "strategyqa",
-            #    "prontoqa"
+            #    "prontoqa",
+            #     "lsat-ar"
+                # "logiqa-en"
 
-$modelChoices = "gpt-3.5-turbo"
+$numExamples = 200
+$asyncConcurr = 7
 
-$promptChoices = "None",
-                  "CoT",
-                 "CoT-WS"
-# $promptChoices = "None"
+# $overwriteResults = "--overwrite_results"
+$overwriteResults = ""
 
-$systemMessageChoices = "instruct-list",
-                    "ChatGPT-default",
-                    "instruct"
-# $systemMessageChoices = "CoT-list"
-
-$numExamples = "500"
-
-$asyncConcurr = 5
+$runIdentifier = "stg2"
+$modelDefnsFiles = 
+# "GoalExtraction/gpt35_goal_approach",
+"GoalExtraction/gpt35_goal_approach_sbs",
+"PromptWithAnswerExtraction/gpt35_cot_instruct"
+# "GoalExtraction/gpt35_goal_answertype"
 
 foreach ($task in $taskChoices) {
-    foreach ($model in $modelChoices) {
-        foreach ($prompt in $promptChoices) {
-            foreach ($systemMessage in $systemMessageChoices) {
-                $command = "run.py --task_name $task --model_name $model --prompt_type $prompt --system_message_type $systemMessage --num_examples $numExamples --async_concurr $asyncConcurr"
-                Write-Host $command
-                python run.py --task_name $task --model_name $model --prompt_type $prompt --system_message_type $systemMessage --num_examples $numExamples --async_concurr $asyncConcurr
-            }
-        }
+    foreach ($modelDefns in $modelDefnsFiles) {
+        $command = "python run.py --task_name $task --model_defns_file $modelDefns  --run_identifier $runIdentifier  --num_examples $numExamples --async_concurr $asyncConcurr $overwriteResults"
+        Write-Host $command
+        Invoke-Expression $command
     }
 }
