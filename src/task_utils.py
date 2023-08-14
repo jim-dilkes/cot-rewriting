@@ -2,7 +2,7 @@ import json
 import os
 import csv
 
-AGIEVAL_TASKS = ['gaokao-physics','logicqa-en','lsat-ar']
+AGIEVAL_TASKS = ['gaokao-physics','logiqa-en','lsat-ar']
 
 # Task specific prompt to generate the correct answer string using the CoT solution
 def get_task_answer_prompt(task_name):
@@ -111,9 +111,10 @@ def load_prontoqa(filename, filedir):
     print(f"{len(questions)} prontoqa examples loaded from {file_path}")
     return questions, answers
 
+
 def load_agieval(filename, filedir):
     file_path = os.path.join(filedir, filename)
-    with open(file_path, "r") as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         examples = [json.loads(l) for l in f]
 
     for ex in examples:
