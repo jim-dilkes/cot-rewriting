@@ -167,3 +167,4 @@ data/prontoqa/*
 
 .vscode/*
 .archive/*
+.logs/*
