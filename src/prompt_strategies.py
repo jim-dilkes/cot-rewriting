@@ -77,7 +77,8 @@ class PromptStrategy(ABC):
         )
         cot_responses.append(cot_solution)
 
-        answer_content = f"{cot_solution}"
+        # answer_content = f"{cot_solution}"
+        answer_content = f"Problem Statement: {query}\n\nSolution: {cot_solution}"
         answer = await generate_and_record(
             self.models["answer_extractor"],
             answer_content,
@@ -129,6 +130,9 @@ class SolveValidateRewrite(PromptStrategy):
         super().__init__(model_messages_json, task_name)
 
     async def proc_example(self, example: str, example_num: int, semaphore: asyncio.Semaphore):
+        # Prefill generate_and_record with lists in partial
+        
+        
         async with semaphore:
             all_inputs_lst = []
             all_responses_lst = []
@@ -172,7 +176,8 @@ class SolveValidateRewrite(PromptStrategy):
                     all_responses_lst,
                 )
 
-                if clean_answer(decision_response)[-3:] != "yes":
+                # if clean_answer(decision_response)[-3:] != "yes":
+                if clean_answer(decision_response)[-3:] != "no":
                     break
 
                 ## If we are rewriting, generate a new solution, using the previous solution as context
@@ -186,6 +191,47 @@ class SolveValidateRewrite(PromptStrategy):
                 )
 
                 j += 1
+
+            print(f"\rDone example {example_num}", end="")
+            sys.stdout.flush()
+
+            return cot_responses_lst, answers_lst, (all_inputs_lst, all_responses_lst)
+
+
+class GoalExtraction(PromptStrategy):
+    def __init__(self, model_messages_json, task_name):
+        self.required_model_tags = [
+            "cot_generator",
+            "answer_extractor",
+            "goal_extractor"
+        ]
+        super().__init__(model_messages_json, task_name)
+        
+        
+    async def proc_example(self, example: str, example_num: int, semaphore: asyncio.Semaphore):
+        
+        async with semaphore:
+            all_inputs_lst = []
+            all_responses_lst = []
+            answers_lst = []
+            cot_responses_lst = []
+
+            goal_response = await generate_and_record(
+                self.models["goal_extractor"],
+                example,
+                all_inputs_lst,
+                all_responses_lst,
+            )
+            
+            solution_content = f"{example}\n\n{goal_response}"
+            # Updates cot_responses_lst and answers_lst in place
+            await self.generate_answer(
+                solution_content,
+                all_inputs_lst,
+                all_responses_lst,
+                cot_responses_lst,
+                answers_lst,
+            )        
 
             print(f"\rDone example {example_num}", end="")
             sys.stdout.flush()

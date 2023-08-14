@@ -17,9 +17,9 @@ if api_key != "":
 else:
     print("Warning: OPENAI_API_KEY is not set")
     
-MAX_TRIES = 5
+MAX_TRIES = 10
 
-@backoff.on_exception(backoff.expo, (httpx.ReadTimeout, ssl.SSLError, openai.error.OpenAIError), max_tries=MAX_TRIES)
+@backoff.on_exception(backoff.expo, (httpx.ReadTimeout, httpx.ConnectTimeout, ssl.SSLError, TimeoutError, openai.error.OpenAIError), max_tries=MAX_TRIES)
 async def chat_with_backoff_async(**kwargs):
 
     request_id = hash(frozenset(str(kwargs))) % 10000000000 # Short hash of kwargs to identify requests
