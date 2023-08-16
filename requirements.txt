@@ -7,3 +7,5 @@ httpx
 pandas
 transformers
 accelerate
+bitsandbytes
+scipy

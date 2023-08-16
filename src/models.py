@@ -1,26 +1,45 @@
 from src import openai_utils
 from abc import ABC, abstractmethod
-from transformers import pipeline
+from transformers import pipeline,BitsAndBytesConfig,AutoModelForCausalLM
 import torch
 
 
 OAI_CHAT_MODELS = {'gpt-3.5-turbo-0613','gpt-4-0613'}
 OAI_LEGACY_MODELS = {'text-davinci-003'}
-HF_MODELS = {'gpt2','gpt2-xl','meta-llama/Llama-2-7b-hf'}
+HF_LLAMA_CHAT_MODELS = {'meta-llama/Llama-2-7b-chat-hf','meta-llama/Llama-2-13b-chat-hf','meta-llama/Llama-2-70b-chat-hf'}
+HF_MODELS = {'gpt2','gpt2-xl','meta-llama/Llama-2-7b-hf','meta-llama/Llama-2-13b-hf'}
 
-HF_GENERATOR_CACHE = {}
+
+HF_GENERATOR_CACHE = {} 
 
 def get_cached_hf_generator(model_name):
     """
     Only want to load each model once.
     Return a cached model instance if it exists; otherwise, create, cache, and return a new instance.
     """
-    global HF_GENERATOR_CACHE
+    
     if model_name not in HF_GENERATOR_CACHE:
-        if model_name in HF_MODELS:
+        if model_name in HF_MODELS | HF_LLAMA_CHAT_MODELS:
+            llama_70b_prefix = 'meta-llama/Llama-2-70b'
+            if model_name[:len(llama_70b_prefix)] == llama_70b_prefix:
+                bnb_config = BitsAndBytesConfig(
+                        load_in_4bit=True,
+                        bnb_4bit_quant_type='nf4',
+                        bnb_4bit_use_double_quant=True,
+                        bnb_4bit_compute_dtype=torch.bfloat16
+                    )
+                
+                # initialize the model
+                model = AutoModelForCausalLM.from_pretrained(
+                    model_name,
+                    trust_remote_code=True,
+                    quantization_config=bnb_config,
+                    device_map='auto'
+                )
+            
             HF_GENERATOR_CACHE[model_name] = pipeline(
-                                        "text2text-generation",
-                                        model=model_name, 
+                                        "text-generation",
+                                        model=model, 
                                         torch_dtype=torch.float16,
                                         device_map="auto")
         else:
@@ -32,12 +51,13 @@ def structure_message(role:str, content:str) -> dict:
         raise ValueError(f"Unknown chat role: {role}")
     return {'role': role, 'content': content}
 
-
 def get_model(model_name:str, **kwargs):
     if model_name in OAI_CHAT_MODELS | OAI_LEGACY_MODELS:
         return GPTModelInstance(model_name=model_name, **kwargs)
-    elif model_name in {'gpt2','gpt2-xl','meta-llama/Llama-2-7b-hf'}:
-        return HFModelInstance(model_name=model_name, **kwargs)
+    elif model_name in HF_LLAMA_CHAT_MODELS:
+        return HfLlamaChatModelInstance(model_name=model_name, **kwargs)
+    elif model_name in HF_MODELS:
+        return HfModelInstance(model_name=model_name, **kwargs)
     else:
         raise ValueError(f"Unknown model name: {model_name}")
 
@@ -45,13 +65,12 @@ def get_model(model_name:str, **kwargs):
 # Create an ABC for Models
 class ModelInstance(ABC):
 
-    
     def __init__(self, model_name:str, system_message=None, prompt=None, temperature=0.7, max_tokens=256):
         
         self.temperature = temperature
         self.max_tokens = max_tokens
 
-        if model_name not in OAI_CHAT_MODELS | OAI_LEGACY_MODELS | HF_MODELS:
+        if model_name not in OAI_CHAT_MODELS | OAI_LEGACY_MODELS | HF_MODELS | HF_LLAMA_CHAT_MODELS:
             raise ValueError(f"Unknown model name: {model_name}")
         
         self.model_name = model_name
@@ -101,7 +120,8 @@ class GPTModelInstance(ModelInstance):
         return self.prompts_cost() + self.completions_cost()
     
     
-class HFModelInstance(ModelInstance):
+class HfModelInstance(ModelInstance):
+    
     def __init__(self, model_name: str, system_message=None, prompt=None, temperature=0.7, max_tokens=256):
         super().__init__(model_name, system_message, prompt, temperature, max_tokens)
         
@@ -110,20 +130,26 @@ class HFModelInstance(ModelInstance):
         
         self.generator = get_cached_hf_generator(model_name)
         
-        self.prompt_tokens = 0
-        self.completion_tokens = 0
-        
+    def format_input(self, system_message:str, content:str, prompt_message:str):
+        return "\n\n".join([system_message, content, prompt_message])
+    
     async def generate_async(self,  content:str, n_sample:int=1):
-        query_text = "\n\n".join([self.system_message, content, self.prompt_message])
+        query_text = self.format_input(self.system_message, content, self.prompt_message)
         
         response = self.generator(query_text,
                                   num_return_sequences=n_sample,
                                   do_sample=True,
                                   temperature=self.temperature,
-                                  max_length=2056,
-                                    )        
+                                  max_new_tokens=self.max_tokens,
+                                  repetition_penalty=1.1
+                                )        
         response = response[0]['generated_text']
         response = response[len(query_text):] # Remove the query text from the response     
         
-        return query_text, response[0]['generated_text']
+        return query_text, response
     
+    
+class HfLlamaChatModelInstance(HfModelInstance):
+    # The chat versions of the Llama2 models are fine tuned to use a specific prompt format. 
+    def format_input(self, system_message:str, content:str, prompt_message:str):
+        return f"<s><<SYS>>\n{system_message}\n<</SYS>>\n\n[INST]{content}\n\n{prompt_message}[/INST] "
