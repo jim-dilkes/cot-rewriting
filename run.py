@@ -3,7 +3,6 @@ import argparse
 import random
 
 import src.task_utils as task_utils
-from src.models import GPTModel
 
 import pandas as pd
 import asyncio
