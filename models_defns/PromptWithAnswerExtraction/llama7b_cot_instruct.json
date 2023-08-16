@@ -2,17 +2,17 @@
     "class": "PromptWithAnswerExtraction",
     "models": {
         "cot_generator": {
-            "model_name": "gpt-3.5-turbo",
+            "model_name": "meta-llama/Llama-2-7b-hf",
             "system_message": "You are an instruction following, problem solving assistant.",
             "prompt": "Let's think about this step by step.",
-            "temperature": 0,
+            "temperature": 0.0001,
             "max_tokens": 512
         },
         "answer_extractor": {
-            "model_name": "gpt-3.5-turbo",
+            "model_name": "meta-llama/Llama-2-7b-hf",
             "system_message": "You are an instruction following agent. Only respond with the exact answer. Do not explain your answer. Do not respond with sentences. Give exactly one answer.",
             "prompt": "{REPLACE WITH TASK SPECIFIC PROMPT}",
-            "temperature": 0,
+            "temperature": 0.0001,
             "max_tokens": 32
         }
     }
