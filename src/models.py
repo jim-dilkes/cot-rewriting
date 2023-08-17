@@ -1,13 +1,13 @@
 from src import openai_utils
 from abc import ABC, abstractmethod
-from transformers import pipeline,BitsAndBytesConfig,AutoModelForCausalLM
+from transformers import pipeline,BitsAndBytesConfig,AutoModelForCausalLM,AutoTokenizer
 import torch
 
 
 OAI_CHAT_MODELS = {'gpt-3.5-turbo-0613','gpt-4-0613'}
 OAI_LEGACY_MODELS = {'text-davinci-003'}
 HF_LLAMA_CHAT_MODELS = {'meta-llama/Llama-2-7b-chat-hf','meta-llama/Llama-2-13b-chat-hf','meta-llama/Llama-2-70b-chat-hf'}
-HF_MODELS = {'gpt2','gpt2-xl','meta-llama/Llama-2-7b-hf','meta-llama/Llama-2-13b-hf'}
+HF_MODELS = {'gpt2','gpt2-xl','meta-llama/Llama-2-7b-hf','meta-llama/Llama-2-13b-hf','meta-llama/Llama-2-70b-hf'}
 
 
 HF_GENERATOR_CACHE = {} 
@@ -29,7 +29,6 @@ def get_cached_hf_generator(model_name):
                         bnb_4bit_compute_dtype=torch.bfloat16
                     )
                 
-                # initialize the model
                 model = AutoModelForCausalLM.from_pretrained(
                     model_name,
                     trust_remote_code=True,
@@ -39,7 +38,9 @@ def get_cached_hf_generator(model_name):
             
             HF_GENERATOR_CACHE[model_name] = pipeline(
                                         "text-generation",
+                                        # return_full_text=True,
                                         model=model, 
+                                        tokenizer= AutoTokenizer.from_pretrained(model_name),
                                         torch_dtype=torch.float16,
                                         device_map="auto")
         else:
@@ -74,7 +75,7 @@ class ModelInstance(ABC):
             raise ValueError(f"Unknown model name: {model_name}")
         
         self.model_name = model_name
-        self.chat_model = model_name in OAI_CHAT_MODELS
+        self.is_chat_model = model_name in OAI_CHAT_MODELS
 
     @abstractmethod
     async def generate_async(self, content:str, n_sample:int):
@@ -97,7 +98,7 @@ class GPTModelInstance(ModelInstance):
         
         query_messages = [self.system_message, structure_message('user', content), self.prompt_message]
         
-        if self.model_type == 'chat':
+        if self.is_chat_model:
             response = await openai_utils.chat_with_backoff_async(model=self.model_name,
                                                       messages=query_messages,
                                                       temperature=self.temperature,
