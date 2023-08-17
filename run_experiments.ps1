@@ -1,26 +1,28 @@
 $taskChoices =  
             #"tracking_shuffled_objects/three_objects",
-            "gsm8k"
+            # "gsm8k"
             #    "tracking_shuffled_objects/three_objects",
             #    "tracking_shuffled_objects/five_objects",
             #    "tracking_shuffled_objects/seven_objects",
             #    "coinflip/eight",
             #    "strategyqa",
-            #    "prontoqa",
-            #     "lsat-ar"
+               "prontoqa"
+                "lsat-ar"
                 # "logiqa-en"
 
-$numExamples = 200
+$numExamples = 250
 $asyncConcurr = 7
 
 # $overwriteResults = "--overwrite_results"
 $overwriteResults = ""
 
-$runIdentifier = "stg2"
+$runIdentifier = "stg3"
 $modelDefnsFiles = 
+"SolveValidateRewrite/gpt35_validate_pattern"
+# "SolveValidateRewrite/gpt35_validate_rewrite_pattern"
 # "GoalExtraction/gpt35_goal_approach",
-"GoalExtraction/gpt35_goal_approach_sbs",
-"PromptWithAnswerExtraction/gpt35_cot_instruct"
+# "GoalExtraction/gpt35_goal_approach_sbs",
+# "PromptWithAnswerExtraction/gpt35_cot_instruct"
 # "GoalExtraction/gpt35_goal_answertype"
 
 foreach ($task in $taskChoices) {

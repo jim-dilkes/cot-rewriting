@@ -5,14 +5,14 @@
             "model_name": "meta-llama/Llama-2-70b-chat-hf",
             "system_message": "You are an instruction following, problem solving assistant.",
             "prompt": "Let's think about this step by step.",
-            "temperature": 0.0001,
-            "max_tokens": 512
+            "temperature": 0.00001,
+            "max_tokens": 1024
         },
         "answer_extractor": {
             "model_name": "meta-llama/Llama-2-70b-chat-hf",
-            "system_message": "You are an instruction following agent. Only respond with the exact answer. Do not explain your answer. Do not respond with sentences. Give exactly one answer.",
+            "system_message": "You are an instruction following agent. Only respond with the exact answer. Do not explain your answer. You only extract the answer and write nothing else. Give exactly one answer.",
             "prompt": "{REPLACE WITH TASK SPECIFIC PROMPT}",
-            "temperature": 0.0001,
+            "temperature": 0.00001,
             "max_tokens": 32
         }
     }
