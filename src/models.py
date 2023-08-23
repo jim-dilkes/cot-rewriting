@@ -91,8 +91,6 @@ class GPTModelInstance(ModelInstance):
         self.prompt_message = structure_message('user', prompt) # Prompt message to append to all queries
         
         self.tokenizer = openai_utils.get_tokenizer(model_name)
-        self.prompt_tokens = 0
-        self.completion_tokens = 0
 
     async def generate_async(self,  content:str, n_sample:int=1, logit_bias:dict={}):
         
@@ -106,8 +104,8 @@ class GPTModelInstance(ModelInstance):
                                                       logit_bias=logit_bias,
                                                       n=n_sample)
         
-        self.prompt_tokens += response['usage']['prompt_tokens']
-        self.completion_tokens += response['usage']['completion_tokens']
+        response['usage']['prompt_tokens']
+        response['usage']['completion_tokens']
         
         return query_messages, response['choices'][0]['message']['content']
     

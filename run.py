@@ -36,8 +36,8 @@ async def main():
         return instance
 
     prompt_strategy = create_prompt_strategy_class(MODELS_DEFNS)
-    
-    
+
+
     ## GENERATE ASYNC TASKS AND RUN
     tasks = [
         prompt_strategy.proc_example(example, i, SEMAPHORE)
@@ -45,10 +45,29 @@ async def main():
     ]
     results = await asyncio.gather(*tasks)
     print()
-    
-    # Extract answers
-    cot_responses, pred_answers, inputs_outputs = zip(*results)
-    final_answers = [a[-1] for a in pred_answers]
+    # Results structure: {
+    #                 "cot_responses": cot_responses_lst,
+    #                 "answers": answers_lst,
+    #                 "all_io": {"inputs": all_inputs_lst, "responses": all_responses_lst},
+    #                 "tokens": {"prompts": prompt_tokens, "completions": completion_tokens},
+    #                 }
+
+    # Convert to pandas table, one row per example
+    results_df = pd.DataFrame(results, columns=["cot_responses", "answers", "all_io", "tokens"])
+    print(results_df)
+
+
+    # Extract answers    
+    # cot_responses = [r["cot_responses"] for r in results]
+    # pred_answers = [r["answers"] for r in results]
+    # inputs_outputs = [r["all_io"] for r in results]
+    # tokens = [r["tokens"] for r in results]
+
+    # Do all four at once
+    # cot_responses, pred_answers, inputs_outputs, tokens = zip(*[(r["cot_responses"], r["answers"], r["all_io"], r["tokens"]) for r in results])
+
+
+    final_answers = [a[-1] for a in results_df["answers"]]
 
 
     #### RECORD RESULTS ####
@@ -57,22 +76,20 @@ async def main():
     results_df = pd.DataFrame({
         "index": range(total_examples),
         "question": task_texts_sample,
-        "cot_response": cot_responses,
+        "cot_response": results_df["cot_responses"],
         "true_answer": [str(a).lower().translate(str.maketrans("", "", string.punctuation)) for a in task_answers_sample],
         "pred_answer": final_answers,
-        "all_answers": pred_answers,
-        "io": inputs_outputs,
+        "all_answers": results_df["answers"],
+        "io": results_df["all_io"],
+        "tokens": results_df["tokens"],
     })
     results_df["correct"] = [int(x) for x in (results_df["true_answer"] == results_df["pred_answer"]).tolist()]
 
     df_dict_list = results_df.to_dict("records")
 
-    # Calculate costs
-    total_prompt_cost = 0  # cot_model.prompts_cost() + answer_model.prompts_cost()
-    total_completion_cost = (
-        0  # cot_model.completions_cost() + answer_model.completions_cost()
-    )
-    total_cost = total_prompt_cost + total_completion_cost
+    total_prompt_tokens = sum(t["prompts"] for t in results_df["tokens"])
+    total_completion_tokens = sum(t["completions"] for t in results_df["tokens"])
+    total_tokens = total_prompt_tokens + total_completion_tokens
 
     details = {
         "Task": TASK_NAME,
@@ -85,23 +102,22 @@ async def main():
         "Number of correct": int(results_df["correct"].sum()),
         "Accuracy": float(results_df["correct"].mean()),
         "Models": MODELS_DEFNS,        
-        "Cost": {
+        "Tokens": {
             "Prompt": {
-                "Total": total_prompt_cost,
-                "Per token": total_prompt_cost / total_examples,
+                "Total": total_prompt_tokens,
+                "Per example": total_completion_tokens / total_examples
             },
             "Completion": {
-                "Total": total_completion_cost,
-                "Per token": total_completion_cost / total_examples,
+                "Total": total_completion_tokens,
+                "Per example": total_completion_tokens / total_examples
             },
             "Total": {
-                "Total": total_cost,
-                "Per token": total_cost / total_examples,
-            },
-            "Currency": "USD",
+                "Total": total_tokens,
+                "Per example": total_tokens / total_examples
+            }
         }
     }
-    
+
     with open(os.path.join(RESULTS_DIR, "details.json"), "w") as f:
         json.dump(details, f, indent=4)
 
@@ -114,13 +130,13 @@ async def main():
                 "correct": item["correct"] == 1,
                 "response_pairs": [{"cot_response": c, "answer": a} for c, a in zip(item["cot_response"], item["all_answers"])],
                 "response_count": len(item["all_answers"]),
-                "queries": [{"query_idx": j, "input": io[0], "output": io[1]} for j, io in enumerate(zip(item["io"][0], item["io"][1]))]
+                "queries": [{"query_idx": j, "input": io["input"], "output": io["response"]} for j, io in enumerate(item["io"])]
             }
             for item in df_dict_list
         ]
 
     details["examples"] = examples_json
-    
+
     with open(os.path.join(RESULTS_DIR, "results.json"), "w") as f:
         json.dump(details, f, indent=4)
 
