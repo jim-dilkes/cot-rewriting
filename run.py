@@ -8,7 +8,8 @@ import pandas as pd
 import asyncio
 
 import logging
-
+# logger name for all files in this project
+logger_name = "main_logger"
 
 async def main():
     
@@ -168,6 +169,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Overwrite results and logs directory if they exists",
     )
+    parser.add_argument(
+        "--ambiguous_incorrect",
+        action="store_true",
+        help="Prompts the answer extractor to give an incorrect answer if the response is ambiguous",
+    )
 
 
     ## Parse arguments
@@ -192,14 +198,13 @@ if __name__ == "__main__":
         models_defns_json["kwargs"] if "kwargs" in models_defns_json else {}
     )
     MODELS_DEFNS = models_defns_json["models"]
-    MODELS_DEFNS["answer_extractor"]["prompt"] = task_utils.get_task_answer_prompt(TASK_NAME)
+    MODELS_DEFNS["answer_extractor"]["prompt"] = task_utils.get_task_answer_prompt(TASK_NAME, ambiguous_incorrect=args.ambiguous_incorrect)
 
 
     # Define the complete run dir for results and logs
     RUN_DIR = f"{models_file}" + (
         "" if RUN_IDENTIFIER == "" else f"__{RUN_IDENTIFIER}"
     )
-    # RUN_DIR = RUN_DIR.replace("/", "-")
 
     # Make a directory in results for this run
     results_dir = (
@@ -224,16 +229,17 @@ if __name__ == "__main__":
     logs_dir = f"./.logs/{TASK_NAME.replace('/','_')}"
     log_subdir, log_file = os.path.split(RUN_DIR)
     logs_dir = os.path.join(logs_dir, log_subdir)
-    if os.path.exists(logs_dir):
-        shutil.rmtree(logs_dir)
-    os.makedirs(logs_dir)
+    log_file = os.path.join(logs_dir, f"{log_file}.log")
+    if not os.path.exists(logs_dir):
+        os.makedirs(logs_dir)
+    if os.path.exists(log_file):
+        os.remove(log_file)
 
     # Create a logger
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(logger_name)
     logger.setLevel(logging.DEBUG)
 
     # Create a file handler
-    log_file = os.path.join(logs_dir, f"{log_file}.log")
     file_handler = logging.FileHandler(log_file)
     file_handler.setLevel(logging.DEBUG)  # file handler handles all messages
 
@@ -251,8 +257,6 @@ if __name__ == "__main__":
     # Add the handlers to the logger
     logger.addHandler(file_handler)
     logger.addHandler(stream_handler)
-
-
 
     ## SET UP ASYNCIO ##
     

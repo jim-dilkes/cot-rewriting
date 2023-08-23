@@ -9,7 +9,8 @@ import time
 import logging
 
 # Get a logger instance for the current file
-logger = logging.getLogger(__name__)
+logger_name = "main_logger"
+logger = logging.getLogger(logger_name)
 
 api_key = os.getenv("OPENAI_API_KEY", "")
 if api_key != "":

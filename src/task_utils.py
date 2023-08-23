@@ -5,22 +5,39 @@ import csv
 AGIEVAL_TASKS = ['gaokao-physics','logiqa-en','lsat-ar']
 
 # Task specific prompt to generate the correct answer string using the CoT solution
-def get_task_answer_prompt(task_name):
-    if task_name == "gsm8k":
-        return "Respond with a single value that is the answer to the problem. Do not explain your answer or include symbols"
-    elif task_name[: len("tracking_shuffled_objects")] == "tracking_shuffled_objects":
-        return "Respond with the correct completion of the problem statement. Do not include names. Give only the entity that completes the final sentence."
-    elif task_name[: len("coinflip")] == "coinflip":
-        return "Respond with the final state of the coin. Do not explain your answer only use heads or tails"
-    elif task_name == "strategyqa":
-        return "Respond with the answer to the question. Do not explain your answer only use yes or no"
-    elif task_name == "prontoqa":
-        return "Respond with the answer to the question. Do not explain your answer only use true or false"
-    elif task_name in AGIEVAL_TASKS:
-        return "Respond with the multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E"
-    else:
-        raise ValueError(f"Unknown benchmark name: {task_name}")
-
+def get_task_answer_prompt(task_name, ambiguous_incorrect=False):
+    print("Ambiguous incorrect: ", ambiguous_incorrect)
+    if ambiguous_incorrect: # For ambiguous responses, prompt for an answer that will be marked as incorrect
+        if task_name == "gsm8k":
+            return "Respond with the given single value that is the answer to the problem. Do not explain your answer or include symbols. If there is no answer or multiple answers respond with NA."
+        elif task_name[: len("tracking_shuffled_objects")] == "tracking_shuffled_objects":
+            return "Respond with the correct given completion of the problem statement. Do not include names. Give only the entity that completes the final sentence. If the answer is ambiguous, respond with NA."
+        elif task_name[: len("coinflip")] == "coinflip":
+            return "Respond with the given final state of the coin. Do not explain your answer only use heads or tails. If there is no answer or multiple answers respond with NA."
+        elif task_name == "strategyqa":
+            return "Respond with the given answer to the question. Do not explain your answer only use yes or no. If there is no answer or multiple answers respond with NA."
+        elif task_name == "prontoqa":
+            return "Respond with the given answer to the question. Do not explain your answer only use true or false. If no answer is given, respond with NA."
+        elif task_name in AGIEVAL_TASKS:
+            return "Respond with the given multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E. If there is no answer or multiple answers respond with F."
+        else:
+            raise ValueError(f"Unknown benchmark name: {task_name}")
+    else: 
+        if task_name == "gsm8k":
+            return "Respond with a single value that is the answer to the problem. Do not explain your answer or include symbols."
+        elif task_name[: len("tracking_shuffled_objects")] == "tracking_shuffled_objects":
+            return "Respond with the correct completion of the problem statement. Do not include names. Give only the entity that completes the final sentence."
+        elif task_name[: len("coinflip")] == "coinflip":
+            return "Respond with the final state of the coin. Do not explain your answer only use heads or tails."
+        elif task_name == "strategyqa":
+            return "Respond with the answer to the question. Do not explain your answer only use yes or no."
+        elif task_name == "prontoqa":
+            return "Respond with the answer to the question. Do not explain your answer only use true or false."
+        elif task_name in AGIEVAL_TASKS:
+            return "Respond with the multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E."
+        else:
+            raise ValueError(f"Unknown benchmark name: {task_name}")
+        
 
 # Task data load
 def load_task(task_name, task_dir):
