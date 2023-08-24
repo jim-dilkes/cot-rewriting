@@ -53,20 +53,7 @@ async def main():
     #                 }
 
     # Convert to pandas table, one row per example
-    results_df = pd.DataFrame(results, columns=["cot_responses", "answers", "all_io", "tokens"])
-    print(results_df)
-
-
-    # Extract answers    
-    # cot_responses = [r["cot_responses"] for r in results]
-    # pred_answers = [r["answers"] for r in results]
-    # inputs_outputs = [r["all_io"] for r in results]
-    # tokens = [r["tokens"] for r in results]
-
-    # Do all four at once
-    # cot_responses, pred_answers, inputs_outputs, tokens = zip(*[(r["cot_responses"], r["answers"], r["all_io"], r["tokens"]) for r in results])
-
-
+    results_df = pd.DataFrame(results, columns=["cot_responses", "answers", "query_details"])    
     final_answers = [a[-1] for a in results_df["answers"]]
 
 
@@ -80,15 +67,11 @@ async def main():
         "true_answer": [str(a).lower().translate(str.maketrans("", "", string.punctuation)) for a in task_answers_sample],
         "pred_answer": final_answers,
         "all_answers": results_df["answers"],
-        "io": results_df["all_io"],
-        "tokens": results_df["tokens"],
+        "query_details": results_df["query_details"]
     })
     results_df["correct"] = [int(x) for x in (results_df["true_answer"] == results_df["pred_answer"]).tolist()]
-
-    df_dict_list = results_df.to_dict("records")
-
-    total_prompt_tokens = sum(t["prompts"] for t in results_df["tokens"])
-    total_completion_tokens = sum(t["completions"] for t in results_df["tokens"])
+    total_prompt_tokens = sum(t["token_counts"]["prompt_tokens"] for q in results_df["query_details"] for t in q)
+    total_completion_tokens = sum(t["token_counts"]["completion_tokens"] for q in results_df["query_details"] for t in q)
     total_tokens = total_prompt_tokens + total_completion_tokens
 
     details = {
@@ -102,18 +85,18 @@ async def main():
         "Number of correct": int(results_df["correct"].sum()),
         "Accuracy": float(results_df["correct"].mean()),
         "Models": MODELS_DEFNS,        
-        "Tokens": {
-            "Prompt": {
-                "Total": total_prompt_tokens,
-                "Per example": total_completion_tokens / total_examples
+        "Token counts": {
+            "prompt": {
+                "total": total_prompt_tokens,
+                "per_example": total_prompt_tokens / total_examples
             },
-            "Completion": {
-                "Total": total_completion_tokens,
-                "Per example": total_completion_tokens / total_examples
+            "completion": {
+                "total": total_completion_tokens,
+                "per_example": total_completion_tokens / total_examples
             },
-            "Total": {
-                "Total": total_tokens,
-                "Per example": total_tokens / total_examples
+            "total": {
+                "total": total_tokens,
+                "per_example": total_tokens / total_examples
             }
         }
     }
@@ -130,12 +113,12 @@ async def main():
                 "correct": item["correct"] == 1,
                 "response_pairs": [{"cot_response": c, "answer": a} for c, a in zip(item["cot_response"], item["all_answers"])],
                 "response_count": len(item["all_answers"]),
-                "queries": [{"query_idx": j, "input": io["input"], "output": io["response"]} for j, io in enumerate(item["io"])]
+                "queries": [{"query_idx": j, **d} for j, d in enumerate(item["query_details"])]
             }
-            for item in df_dict_list
+            for item in results_df.to_dict("records")
         ]
 
-    details["examples"] = examples_json
+    details["Examples"] = examples_json
 
     with open(os.path.join(RESULTS_DIR, "results.json"), "w") as f:
         json.dump(details, f, indent=4)
