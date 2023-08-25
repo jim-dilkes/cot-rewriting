@@ -163,7 +163,6 @@ cython_debug/
 .dev/*
 data/strategyqa/*
 data/tracking_shuffled_objects/*
-data/prontoqa/*
 
 .vscode/*
 .archive/*
