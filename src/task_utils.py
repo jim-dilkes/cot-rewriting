@@ -6,7 +6,6 @@ AGIEVAL_TASKS = ['gaokao-physics','logiqa-en','lsat-ar']
 
 # Task specific prompt to generate the correct answer string using the CoT solution
 def get_task_answer_prompt(task_name, ambiguous_incorrect=False):
-    print("Ambiguous incorrect: ", ambiguous_incorrect)
     if ambiguous_incorrect: # For ambiguous responses, prompt for an answer that will be marked as incorrect
         if task_name == "gsm8k":
             return "Respond with the given single value that is the answer to the problem. Do not explain your answer or include symbols. If there is no answer or multiple answers respond with NA."
@@ -17,7 +16,7 @@ def get_task_answer_prompt(task_name, ambiguous_incorrect=False):
         elif task_name == "strategyqa":
             return "Respond with the given answer to the question. Do not explain your answer only use yes or no. If there is no answer or multiple answers respond with NA."
         elif task_name == "prontoqa":
-            return "Respond with the given answer to the question. Do not explain your answer only use true or false. If no answer is given, respond with NA."
+            return "Extract the answer from the response. Do not explain your answer only use True or False. Respond with NA if no answer is given. True/False:"
         elif task_name in AGIEVAL_TASKS:
             return "Respond with the given multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E. If there is no answer or multiple answers respond with F."
         else:
