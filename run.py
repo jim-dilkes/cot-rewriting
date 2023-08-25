@@ -128,8 +128,7 @@ async def main():
 
 # python run.py --task_name tracking_shuffled_objects/three_objects --model_name gpt-3.5-turbo --run_identifier test --prompt_type CoT --system_message_type ChatGPT-default --num_examples 20
 if __name__ == "__main__":
-    random.seed(1)
-
+    
     task_choices = [
         "gsm8k",
         "tracking_shuffled_objects/three_objects",
@@ -173,7 +172,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Prompts the answer extractor to give an incorrect answer if the response is ambiguous",
     )
-
+    parser.add_argument(
+        "--seed",
+        default=1,
+        type=int,
+        help="Random seed"
+    )
 
     ## Parse arguments
     args = parser.parse_args()
@@ -181,6 +185,7 @@ if __name__ == "__main__":
     RUN_IDENTIFIER = args.run_identifier
     NUM_EXAMPLES = 1e9 if args.num_examples == "all" else int(args.num_examples)
 
+    random.seed(args.seed)
 
     ## Model Definitions Config File Import
     models_dir = "models_defns"
