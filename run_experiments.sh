@@ -13,6 +13,7 @@ taskChoices=(
 
 numExamples=300
 asyncConcurr=7
+randomSeed=1
 
 # Uncomment the below line to enable overwriting results
 # overwriteResults="--overwrite_results"
@@ -38,7 +39,7 @@ modelDefnsFiles=(
 
 for task in "${taskChoices[@]}"; do
     for modelDefns in "${modelDefnsFiles[@]}"; do
-        command="python run.py --task_name $task --model_defns_file $modelDefns  --run_identifier $runIdentifier  --num_examples $numExamples --async_concurr $asyncConcurr $overwriteResults $ambiguousIncorrect"
+        command="python run.py --task_name $task --model_defns_file $modelDefns  --run_identifier $runIdentifier  --num_examples $numExamples --async_concurr $asyncConcurr --seed $randomSeed $overwriteResults $ambiguousIncorrect"
         echo $command
         $command
     done
