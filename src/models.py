@@ -220,4 +220,5 @@ class HfModelInstance(ModelInstance):
 class HfLlamaChatModelInstance(HfModelInstance):
     # The chat versions of the Llama2 models are fine tuned to use a specific prompt format.
     def format_input(self, system_message: str, content: str, prompt_message: str):
-        return f"<s><<SYS>>\n{system_message}\n<</SYS>>\n\n[INST]{content}\n\n{prompt_message}[/INST] "
+        prompt_part = f'\n\n{prompt_message}' if prompt_message != '' else ''
+        return f"<s><<SYS>>\n{system_message}\n<</SYS>>\n\n[INST]{content}{prompt_part}[/INST] "
