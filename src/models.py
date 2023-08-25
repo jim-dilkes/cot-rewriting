@@ -183,6 +183,7 @@ class HfModelInstance(ModelInstance):
         self.prompt_message = prompt
 
         self.generator = get_cached_hf_generator(model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     def format_input(self, system_message: str, content: str, prompt_message: str):
         return "\n\n".join([system_message, content, prompt_message])
@@ -191,6 +192,8 @@ class HfModelInstance(ModelInstance):
         query_text = self.format_input(
             self.system_message, content, self.prompt_message
         )
+        
+        input_tokens = self.tokenizer(query_text, return_tensors='pt')
 
         response = self.generator(
             query_text,
@@ -201,18 +204,18 @@ class HfModelInstance(ModelInstance):
             repetition_penalty=1.1,
         )
         response = response[0]["generated_text"]
-        response = response[
-            len(query_text):
-        ]  # Remove the query text from the response
+        # Remove the query text from the response
+        response = response[len(query_text):]
 
-        
+        prompt_tokens = len(input_tokens['input_ids'][0])
+        completion_tokens = len(self.tokenizer.tokenize(response))
         return {
                 "input": query_text,
                 "response": response,
                 "token_counts": {
-                        "prompt_tokens": 0,
-                        "completion_tokens": 0,
-                        "total_tokens": 0
+                        "prompt_tokens": prompt_tokens,
+                        "completion_tokens": completion_tokens,
+                        "total_tokens": prompt_tokens + completion_tokens
                     }
         }
 
