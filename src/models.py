@@ -125,10 +125,10 @@ class GPTModelInstance(ModelInstance):
 
         self.system_message = structure_message(
             "system", system_message
-        )  # System message to prepend to all queries
+        )  if system_message != "" else None # System message to prepend to all queries
         self.prompt_message = structure_message(
             "user", prompt
-        )  # Prompt message to append to all queries
+        )  if prompt != "" else None  # Prompt message to append to all queries
 
         self.tokenizer = openai_utils.get_tokenizer(model_name)
 
@@ -140,6 +140,7 @@ class GPTModelInstance(ModelInstance):
             structure_message("user", content),
             self.prompt_message,
         ]
+        query_messages = [m for m in query_messages if m is not None]
 
         if self.is_chat_model:
             response = await openai_utils.chat_with_backoff_async(

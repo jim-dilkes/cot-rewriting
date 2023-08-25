@@ -59,7 +59,7 @@ class PromptStrategy(ABC):
         )
         cot_response = cot_input_response["response"]
 
-        answer_content = f"Problem Statement: {query}\n\nSolution: {cot_response}"
+        answer_content = f"Problem Statement: {query}\n\nAnswer: {cot_response}"
         answer_input_response = await self.models["answer_extractor"].generate_async(
             answer_content,
             n_sample=n_sample,
