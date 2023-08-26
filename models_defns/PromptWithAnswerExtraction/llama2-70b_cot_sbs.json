@@ -5,7 +5,7 @@
             "model_name": "meta-llama/Llama-2-70b-chat-hf",
             "system_message": "You are an instruction following, problem solving assistant.",
             "prompt": "Let's think about this step by step.",
-            "temperature": 0,
+            "temperature": 0.00001,
             "max_tokens": 1024
         },
         "answer_extractor": {
