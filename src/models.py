@@ -1,5 +1,6 @@
 from src import openai_utils
 from abc import ABC, abstractmethod
+from asyncio import Queue, get_event_loop, wait_for, TimeoutError, Future
 from transformers import (
     pipeline,
     BitsAndBytesConfig,
@@ -15,6 +16,9 @@ HF_LLAMA_CHAT_MODELS = {
     "meta-llama/Llama-2-7b-chat-hf",
     "meta-llama/Llama-2-13b-chat-hf",
     "meta-llama/Llama-2-70b-chat-hf",
+    "meta-llama/Llama-2-7b-chat-hf-4bit",
+    "meta-llama/Llama-2-13b-chat-hf-4bit",
+    "meta-llama/Llama-2-70b-chat-hf-4bit",
 }
 HF_MODELS = {
     "gpt2",
@@ -23,6 +27,7 @@ HF_MODELS = {
     "meta-llama/Llama-2-13b-hf",
     "meta-llama/Llama-2-70b-hf",
 }
+
 
 
 HF_GENERATOR_CACHE = {}
@@ -36,8 +41,8 @@ def get_cached_hf_generator(model_name):
 
     if model_name not in HF_GENERATOR_CACHE:
         if model_name in HF_MODELS | HF_LLAMA_CHAT_MODELS:
-            llama_70b_prefix = "meta-llama/Llama-2-70b"
-            if model_name[: len(llama_70b_prefix)] == llama_70b_prefix:
+            if model_name.endswith("-4bit"):
+                model_name = model_name[:-5]
                 bnb_config = BitsAndBytesConfig(
                     load_in_4bit=True,
                     bnb_4bit_quant_type="nf4",
@@ -49,6 +54,12 @@ def get_cached_hf_generator(model_name):
                     model_name,
                     trust_remote_code=True,
                     quantization_config=bnb_config,
+                    device_map="auto",
+                )
+            else:
+                model = AutoModelForCausalLM.from_pretrained(
+                    model_name,
+                    trust_remote_code=True,
                     device_map="auto",
                 )
 
@@ -175,49 +186,89 @@ class HfModelInstance(ModelInstance):
         system_message=None,
         prompt=None,
         temperature=0.7,
-        max_tokens=256,
+        max_tokens=512,
+        batch_size=1
     ):
         super().__init__(model_name, system_message, prompt, temperature, max_tokens)
 
         self.system_message = system_message
         self.prompt_message = prompt
 
+        self.batch_size = batch_size
+        
         self.generator = get_cached_hf_generator(model_name)
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-
+        
+        self.async_queue = Queue()
+        self.loop = get_event_loop()
+        self.loop.create_task(self.process_batches())
+        
     def format_input(self, system_message: str, content: str, prompt_message: str):
         return "\n\n".join([system_message, content, prompt_message])
+    
+    async def add_request(self, content: str, n_sample=1):
+        future = Future()
+        await self.async_queue.put((content, n_sample, future))
+        return future
 
-    async def generate_async(self, content: str, n_sample: int = 1):
-        query_text = self.format_input(
-            self.system_message, content, self.prompt_message
-        )
-        
-        input_tokens = self.tokenizer(query_text, return_tensors='pt')
+    async def process_batches(self):
+        # Repeatedly fill the batch until batch_size is reached or timeout, then process the batch
+        while True:
+            batch = []
+            for _ in range(self.batch_size):
+                try:
+                    item = await wait_for(self.async_queue.get(), timeout=30.0)
+                    batch.append(item)
+                except TimeoutError:
+                    if batch:
+                        break
+            await self.process_batch(batch)
 
-        response = self.generator(
-            query_text,
-            num_return_sequences=n_sample,
+    async def process_batch(self, batch):
+        # Process a batch of requests concurrently
+        input_texts = [
+            self.format_input(self.system_message, content, self.prompt_message)
+            for content, _, _ in batch
+        ]
+
+        if not input_texts: # Skip if the batch is empty
+            return
+
+        batch_output = self.generator(
+            input_texts,
+            num_return_sequences=1,
+            return_tensors=True,
             do_sample=True,
             temperature=self.temperature,
-            max_new_tokens=self.max_tokens,
-            repetition_penalty=1.1,
+            max_length=self.max_tokens,
+            repetition_penalty=1.1
         )
-        response = response[0]["generated_text"]
-        # Remove the query text from the response
-        response = response[len(query_text):]
 
-        prompt_tokens = len(input_tokens['input_ids'][0])
-        completion_tokens = len(self.tokenizer.tokenize(response))
-        return {
-                "input": query_text,
-                "response": response,
+        prompt_tokens = self.tokenizer(input_texts, return_tensors='pt', padding=True)
+        # Iterate through the responses for each request in the batch
+        for i, completion_tokens in enumerate(batch_output):
+            completion_tokens = completion_tokens[0]["generated_token_ids"] # Extract the generated token ids
+            future = batch[i][2]  # This request's future
+            generated_text = self.tokenizer.decode(completion_tokens, skip_special_tokens=True)
+
+            # Count input and output tokens
+            n_prompt_tokens = len(prompt_tokens['input_ids'][i])
+            n_completion_tokens = len(completion_tokens)
+
+            # Set this request's future result
+            future.set_result({
+                "input": input_texts[i],
+                "response": generated_text,
                 "token_counts": {
-                        "prompt_tokens": prompt_tokens,
-                        "completion_tokens": completion_tokens,
-                        "total_tokens": prompt_tokens + completion_tokens
+                        "prompt_tokens": n_prompt_tokens,
+                        "completion_tokens": n_completion_tokens,
+                        "total_tokens": n_prompt_tokens + n_completion_tokens
                     }
-        }
+            })
+
+    async def generate_async(self, content: str, n_sample: int = 1):
+        future = await self.add_request(content, n_sample)
+        return await future  # Await the future and return its result
 
 
 class HfLlamaChatModelInstance(HfModelInstance):

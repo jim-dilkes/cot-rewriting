@@ -2,11 +2,12 @@
     "class": "PromptWithAnswerExtraction",
     "models": {
         "cot_generator": {
-            "model_name": "meta-llama/Llama-2-70b-chat-hf",
+            "model_name": "meta-llama/Llama-2-70b-chat-hf-4bit",
             "system_message": "You are an instruction following, problem solving assistant.",
             "prompt": "",
             "temperature": 0.00001,
-            "max_tokens": 1024
+            "max_tokens": 1024,
+            "batch_size": 10
         },
         "answer_extractor": {
             "model_name": "gpt-3.5-turbo-0613",
