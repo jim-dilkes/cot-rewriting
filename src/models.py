@@ -197,7 +197,6 @@ class HfModelInstance(ModelInstance):
         self.batch_size = batch_size
         
         self.generator = get_cached_hf_generator(model_name)
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         
         self.async_queue = Queue()
         self.loop = get_event_loop()
@@ -244,12 +243,12 @@ class HfModelInstance(ModelInstance):
             repetition_penalty=1.1
         )
 
-        prompt_tokens = self.tokenizer(input_texts, return_tensors='pt', padding=True)
+        prompt_tokens = self.generator.tokenizer(input_texts, return_tensors='pt', padding=True)
         # Iterate through the responses for each request in the batch
         for i, completion_tokens in enumerate(batch_output):
             completion_tokens = completion_tokens[0]["generated_token_ids"] # Extract the generated token ids
             future = batch[i][2]  # This request's future
-            generated_text = self.tokenizer.decode(completion_tokens, skip_special_tokens=True)
+            generated_text = self.generator.tokenizer.decode(completion_tokens, skip_special_tokens=True)
 
             # Count input and output tokens
             n_prompt_tokens = len(prompt_tokens['input_ids'][i])
