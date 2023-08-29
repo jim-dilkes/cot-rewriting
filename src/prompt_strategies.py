@@ -50,17 +50,17 @@ class PromptStrategy(ABC):
     def proc_example(self, example: str) -> tuple:
         pass
 
-    async def generate_answer(self, query: str):
+    async def generate_answer(self, query: str, cot_model="cot_generator", answer_model="answer_extractor"):
         n_sample = 1
         """Generates a single answer to a query and records the inputs and outputs"""
-        cot_input_response = await self.models["cot_generator"].generate_async(
+        cot_input_response = await self.models[cot_model].generate_async(
             query,
             n_sample=n_sample,
         )
         cot_response = cot_input_response["response"]
 
         answer_content = f"Problem Statement: {query}\n\nAnswer: {cot_response}"
-        answer_input_response = await self.models["answer_extractor"].generate_async(
+        answer_input_response = await self.models[answer_model].generate_async(
             answer_content,
             n_sample=n_sample,
         )
@@ -151,7 +151,7 @@ class SolveValidateRewrite(PromptStrategy):
                 ## If we are rewriting, generate a new solution, using the previous solution as context
                 cot_content = f"Problem Statement: {example}\n\n: Validation of prior incorrect solution: {val_response_dict['response']}"
                 cot_response, answer, response_dict = await self.generate_answer(
-                    cot_content
+                    cot_content, cot_model="rewriter"
                 )
                 cot_responses_lst.append(cot_response)
                 answers_lst.append(answer)
