@@ -94,13 +94,15 @@ class PromptWithAnswerExtraction(PromptStrategy):
 
 
 class SolveValidateRewrite(PromptStrategy):
-    def __init__(self, model_messages_json, task_name, max_rewrites=2):
+    def __init__(self, model_messages_json, task_name, rewrite_trigger='no', max_rewrites=2):
         self.max_rewrites = max_rewrites
+        self.rewrite_trigger = rewrite_trigger
         self.required_model_tags = [
             "cot_generator",
             "answer_extractor",
             "validator",
             "decider",
+            "rewriter"
         ]
         super().__init__(model_messages_json, task_name)
 
@@ -143,12 +145,11 @@ class SolveValidateRewrite(PromptStrategy):
                 )
                 gen_respose_dicts.append(decis_response_dict)
 
-                # if clean_answer(decision_response)[-3:] != "yes":
-                if clean_answer(decis_response_dict["response"])[-3:] != "no":
+                if clean_answer(decis_response_dict["response"])[-3:] != self.rewrite_trigger:
                     break
 
                 ## If we are rewriting, generate a new solution, using the previous solution as context
-                cot_content = f"Problem Statement: {example}\n\nPrevious erroneous attempts: {cot_answer_content}"
+                cot_content = f"Problem Statement: {example}\n\n: Validation of prior incorrect solution: {val_response_dict['response']}"
                 cot_response, answer, response_dict = await self.generate_answer(
                     cot_content
                 )
@@ -162,8 +163,8 @@ class SolveValidateRewrite(PromptStrategy):
             sys.stdout.flush()
             
             return {
-                "cot_responses": [cot_response],
-                "answers": [answer],
+                "cot_responses": cot_responses_lst,
+                "answers": answers_lst,
                 "query_details": gen_respose_dicts,
             }
 
