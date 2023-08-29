@@ -9,17 +9,17 @@ def get_task_answer_prompt(task_name, ambiguous_incorrect=False):
     if ambiguous_incorrect: # For ambiguous responses, prompt for an answer that will be marked as incorrect
         if task_name == "gsm8k":
             return "Respond with the given single value that is the answer to the problem. Do not explain your answer or include symbols. If there is no answer or multiple answers respond with NA."
-        elif task_name[: len("tracking_shuffled_objects")] == "tracking_shuffled_objects":
-            if task_name[-len("multi"):]== "multi":
+        elif task_name.startswith("tracking_shuffled_objects"):
+            if task_name.endswith("multi"):
                 return "Respond with exactly the given multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E. If there is no answer or multiple answers respond with NA. A/B/C/D/E/NA:"
             else:
                 return "Respond with the correct given completion of the problem statement. Do not include names. Give only the entity that completes the final sentence. If the answer is ambiguous, respond with NA."
-        elif task_name[: len("coinflip")] == "coinflip":
+        elif task_name.startswith("coinflip"):
             return "Respond with the given final state of the coin. Do not explain your answer only use heads or tails. If there is no answer or multiple answers respond with NA."
         elif task_name == "strategyqa":
             return "Respond with the given answer to the question. Do not explain your answer only use yes or no. If there is no answer or multiple answers respond with NA."
         elif task_name == "prontoqa":
-            return "Extract the answer from the response. Do not explain your answer only use True or False. Respond with NA if no answer is given. True/False:"
+            return "Extract the answer from the response. Do not explain your answer only use True or False. Respond with NA if an inconclusive answer is given. True/False:"
         elif task_name in AGIEVAL_TASKS:
             return "Respond with the given multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E. If there is no answer or multiple answers respond with F."
         else:
@@ -27,9 +27,12 @@ def get_task_answer_prompt(task_name, ambiguous_incorrect=False):
     else: 
         if task_name == "gsm8k":
             return "Respond with a single value that is the answer to the problem. Do not explain your answer or include symbols."
-        elif task_name[: len("tracking_shuffled_objects")] == "tracking_shuffled_objects":
-            return "Respond with the correct completion of the problem statement. Do not include names. Give only the entity that completes the final sentence."
-        elif task_name[: len("coinflip")] == "coinflip":
+        elif task_name.startswith("tracking_shuffled_objects"):
+            if task_name.endswith("multi"):
+                return "Respond with exactly the given multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E."
+            else:
+                return "Respond with the correct completion of the problem statement. Do not include names. Give only the entity that completes the final sentence."
+        elif task_name.startswith("coinflip"):
             return "Respond with the final state of the coin. Do not explain your answer only use heads or tails."
         elif task_name == "strategyqa":
             return "Respond with the answer to the question. Do not explain your answer only use yes or no."
