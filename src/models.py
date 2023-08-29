@@ -1,4 +1,5 @@
 from src import openai_utils
+import datetime
 from abc import ABC, abstractmethod
 from asyncio import Queue, get_event_loop, wait_for, TimeoutError, Future
 from transformers import (
@@ -10,7 +11,7 @@ from transformers import (
 import torch
 
 
-OAI_CHAT_MODELS = {"gpt-3.5-turbo-0613", "gpt-4-0613"}
+OAI_CHAT_MODELS = {"gpt-3.5-turbo-0613", "gpt-4-0613","gpt-3.5-turbo"}
 OAI_LEGACY_MODELS = {"text-davinci-003"}
 HF_LLAMA_CHAT_MODELS = {
     "meta-llama/Llama-2-7b-chat-hf",
@@ -63,11 +64,17 @@ def get_cached_hf_generator(model_name):
                     device_map="auto",
                 )
 
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            # Set pad to eos if there is no pad
+            if tokenizer.pad_token_id is None:
+                tokenizer.pad_token = tokenizer.eos_token
+                tokenizer.pad_token_id = tokenizer.eos_token_id
+                
             HF_GENERATOR_CACHE[model_name] = pipeline(
                 "text-generation",
                 # return_full_text=True,
                 model=model,
-                tokenizer=AutoTokenizer.from_pretrained(model_name),
+                tokenizer=tokenizer,
                 torch_dtype=torch.float16,
                 device_map="auto",
             )
@@ -242,8 +249,6 @@ class HfModelInstance(ModelInstance):
             max_length=self.max_tokens,
             repetition_penalty=1.1
         )
-
-        prompt_tokens = self.generator.tokenizer(input_texts, return_tensors='pt', padding=True)
         # Iterate through the responses for each request in the batch
         for i, completion_tokens in enumerate(batch_output):
             completion_tokens = completion_tokens[0]["generated_token_ids"] # Extract the generated token ids
@@ -251,7 +256,7 @@ class HfModelInstance(ModelInstance):
             generated_text = self.generator.tokenizer.decode(completion_tokens, skip_special_tokens=True)
 
             # Count input and output tokens
-            n_prompt_tokens = len(prompt_tokens['input_ids'][i])
+            n_prompt_tokens = len(prompt_tokens['input_ids'])
             n_completion_tokens = len(completion_tokens)
 
             # Set this request's future result
