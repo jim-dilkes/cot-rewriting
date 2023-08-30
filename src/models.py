@@ -237,9 +237,10 @@ class HfModelInstance(ModelInstance):
             for content, _, _ in batch
         ]
 
+        print(f"Processing batch of size {len(batch)} (max: {self.batch_size})")
         if not input_texts: # Skip if the batch is empty
             return
-
+        start_time = datetime.datetime.now()
         batch_output = self.generator(
             input_texts,
             num_return_sequences=1,
@@ -249,13 +250,16 @@ class HfModelInstance(ModelInstance):
             max_length=self.max_tokens,
             repetition_penalty=1.1
         )
+        print(f"Took {datetime.datetime.now() - start_time} to generate {len(batch)} samples")
+
         # Iterate through the responses for each request in the batch
         for i, completion_tokens in enumerate(batch_output):
             completion_tokens = completion_tokens[0]["generated_token_ids"] # Extract the generated token ids
             future = batch[i][2]  # This request's future
-            generated_text = self.generator.tokenizer.decode(completion_tokens, skip_special_tokens=True)
+            generated_text = self.generator.tokenizer(completion_tokens, skip_special_tokens=True)
 
             # Count input and output tokens
+            prompt_tokens = self.generator.tokenizer.encode(input_texts[i], return_tensors="pt")
             n_prompt_tokens = len(prompt_tokens['input_ids'])
             n_completion_tokens = len(completion_tokens)
 
