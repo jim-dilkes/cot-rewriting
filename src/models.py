@@ -105,10 +105,11 @@ class ModelInstance(ABC):
     def __init__(
         self,
         model_name: str,
-        system_message=None,
-        prompt=None,
+        system_message="",
+        prompt="",
+        pre_prompt="",
         temperature=0.7,
-        max_tokens=256,
+        max_tokens=256
     ):
         self.temperature = temperature
         self.max_tokens = max_tokens
@@ -134,12 +135,18 @@ class GPTModelInstance(ModelInstance):
     def __init__(
         self,
         model_name: str,
-        system_message=None,
-        prompt=None,
+        system_message="",
+        prompt="",
+        pre_prompt="",
         temperature=0.7,
-        max_tokens=256,
+        max_tokens=256
     ):
-        super().__init__(model_name, system_message, prompt, temperature, max_tokens)
+        super().__init__(model_name=model_name,
+                         system_message=system_message,
+                         prompt=prompt,
+                         pre_prompt=pre_prompt,
+                         temperature=temperature,
+                         max_tokens=max_tokens)
 
         self.system_message = structure_message(
             "system", system_message
@@ -147,6 +154,9 @@ class GPTModelInstance(ModelInstance):
         self.prompt_message = structure_message(
             "user", prompt
         )  if prompt != "" else None  # Prompt message to append to all queries
+        self.pre_prompt_message = structure_message(
+            "user", pre_prompt
+        )  if pre_prompt != "" else None  # Prompt message to append to all queries
 
         self.tokenizer = openai_utils.get_tokenizer(model_name)
 
@@ -155,6 +165,7 @@ class GPTModelInstance(ModelInstance):
     ):
         query_messages = [
             self.system_message,
+            self.pre_prompt_message,
             structure_message("user", content),
             self.prompt_message,
         ]
@@ -190,8 +201,9 @@ class HfModelInstance(ModelInstance):
     def __init__(
         self,
         model_name: str,
-        system_message=None,
-        prompt=None,
+        system_message="",
+        prompt="",
+        pre_prompt="",
         temperature=0.7,
         max_tokens=512,
         batch_size=1
@@ -200,6 +212,7 @@ class HfModelInstance(ModelInstance):
 
         self.system_message = system_message
         self.prompt_message = prompt
+        self.pre_prompt_message = pre_prompt
 
         self.batch_size = batch_size
         
@@ -210,7 +223,7 @@ class HfModelInstance(ModelInstance):
         self.loop.create_task(self.process_batches())
         
     def format_input(self, system_message: str, content: str, prompt_message: str):
-        return "\n\n".join([system_message, content, prompt_message])
+        return "\n\n".join([content, prompt_message])
     
     async def add_request(self, content: str, n_sample=1):
         future = Future()
