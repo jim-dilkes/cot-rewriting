@@ -126,7 +126,6 @@ async def main():
     print("Accuracy:", results_df["correct"].mean())
 
 
-# python run.py --task_name tracking_shuffled_objects/three_objects --model_name gpt-3.5-turbo --run_identifier test --prompt_type CoT --system_message_type ChatGPT-default --num_examples 20
 if __name__ == "__main__":
     
     task_choices = [
@@ -247,7 +246,7 @@ if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
 
     # Create a file handler
-    file_handler = logging.FileHandler(log_file)
+    file_handler = logging.FileHandler(log_file, encoding='utf-8')
     file_handler.setLevel(logging.DEBUG)  # file handler handles all messages
 
     # Create a stream handler for stdout
