@@ -142,7 +142,12 @@ if __name__ == "__main__":
         "prontoqa",
         "gaokao-physics",
         "logiqa-en",
-        "lsat-ar"
+        "lsat-ar",
+        "aqua-rat",
+        "navigate",
+        "logical_deduction/three_objects_multi",
+        "logical_deduction/five_objects_multi",
+        "logical_deduction/seven_objects_multi",
     ]
 
     parser = argparse.ArgumentParser()

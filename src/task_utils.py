@@ -9,6 +9,8 @@ def get_task_answer_prompt(task_name, ambiguous_incorrect=False):
     if ambiguous_incorrect: # For ambiguous responses, prompt for an answer that will be marked as incorrect
         if task_name == "gsm8k":
             return "Respond with the given single value that is the answer to the problem. Do not explain your answer or include symbols. If there is no answer or multiple answers respond with NA."
+        elif task_name.startswith("logical_deduction"):
+            return "Respond with exactly the given multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E. If there is no answer or multiple answers respond with NA. A/B/C/D/E/NA:"
         elif task_name.startswith("tracking_shuffled_objects"):
             if task_name.endswith("multi"):
                 return "Respond with exactly the given multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E. If there is no answer or multiple answers respond with NA. A/B/C/D/E/NA:"
@@ -22,11 +24,17 @@ def get_task_answer_prompt(task_name, ambiguous_incorrect=False):
             return "Extract the answer from the response. Do not explain your answer only use True or False. Respond with NA if an inconclusive answer is given. True/False:"
         elif task_name in AGIEVAL_TASKS:
             return "Respond with the given multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E. If there is no answer or multiple answers respond with F."
+        elif task_name == "aqua-rat":
+            return "Respond with the given multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E. If there is no answer or multiple answers respond with NA."
+        elif task_name == "navigate":
+            return "Respond \{yes\} if you do return to the starting. Respond \{no\} if you do not return to the starting point. If there is no answer or multiple answers respond with X."
         else:
             raise ValueError(f"Unknown benchmark name: {task_name}")
     else: 
         if task_name == "gsm8k":
             return "Respond with a single value that is the answer to the problem. Do not explain your answer or include symbols."
+        elif task_name.startswith("logical_deduction"):
+            return "Respond with exactly the given multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E."
         elif task_name.startswith("tracking_shuffled_objects"):
             if task_name.endswith("multi"):
                 return "Respond with exactly the given multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E."
@@ -40,6 +48,10 @@ def get_task_answer_prompt(task_name, ambiguous_incorrect=False):
             return "Respond with the answer to the question. Do not explain your answer only use true or false."
         elif task_name in AGIEVAL_TASKS:
             return "Respond with the multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E."
+        elif task_name == "aqua-rat":
+            return "Respond with the given multiple choice answer to the question. Do not explain your answer only use yes or no."
+        elif task_name == "navigate":
+            return "Respond {yes} if you do return to the starting. Respond {no} if you do not return to the starting point."
         else:
             raise ValueError(f"Unknown benchmark name: {task_name}")
         
@@ -47,27 +59,45 @@ def get_task_answer_prompt(task_name, ambiguous_incorrect=False):
 # Task data load
 def load_task(task_name, task_dir):
     if task_name == "gsm8k":
-        questions, answers = load_gsm8k("test.jsonl", filedir=task_dir)
+        return load_gsm8k("test.jsonl", task_dir)
     elif (
-        task_name == "strategyqa"
-        or task_name[: len("tracking_shuffled_objects")] == "tracking_shuffled_objects"
+        task_name in ("strategyqa")
+        or task_name.startswith("tracking_shuffled_objects")
+        or task_name.startswith("logical_deduction")
     ):
-        if task_name[-len("_multi"):]== "_multi":
-            task_dir = task_dir[:-len("_multi")]
-            questions, answers = load_bigbench_multichoice("task.json", filedir=task_dir)
-        else:
-            questions, answers = load_bigbench("task.json", filedir=task_dir)
+        if not task_name.endswith("_multi"):
+            return load_bigbench("task.json", task_dir)
+        return load_bigbench_multichoice("task.json", task_dir[:-len("_multi")])
+    elif task_name == "navigate":
+        return load_navigate("task.json", task_dir)
     elif task_name[: len("coinflip")] == "coinflip":
-        questions, answers = load_coinflip("task.csv", filedir=task_dir)
+        return load_coinflip("task.csv", task_dir)
     elif task_name == "prontoqa":
-        questions, answers = load_prontoqa("345hop_random_true.json", filedir=task_dir)
+        return load_prontoqa("345hop_random_true.json", task_dir)
     elif task_name in AGIEVAL_TASKS:
-        questions, answers = load_agieval("task.jsonl", filedir=task_dir)
+        return load_agieval("task.jsonl", task_dir)
+    elif task_name == "aqua-rat":
+        return load_aqua_rat("test.json", task_dir)
     else:
         raise ValueError(f"Unknown benchmark name: {task_name}")
+    
 
+def load_aqua_rat(filename, filedir):
+    file_path = os.path.join(filedir, filename)
+    with open(file_path, "r") as f:
+        examples = [json.loads(l) for l in f]
+        
+    questions = []
+    answers = []
+    for ex in examples:
+        options = " ".join([f"({o[0]}){o[2:]}" for o in ex['options']])
+        
+        questions.append(f"{ex['question']} {options}")
+        answers.append(ex['correct'])
+        
+    print(f"{len(questions)} aqua-rat examples loaded from {file_path}")
     return questions, answers
-
+        
 
 def load_gsm8k(filename, filedir="data/gsm8k"):
     file_path = os.path.join(filedir, filename)
@@ -87,6 +117,15 @@ def load_gsm8k(filename, filedir="data/gsm8k"):
     print(f"{len(questions)} gsm8k examples loaded from {file_path}")
     return questions, answers
 
+def load_navigate(filename, filedir):
+    questions, answers = load_bigbench(filename, filedir)
+    
+    task_prefix = "If you follow these instructions, do you return to the starting point?"
+    questions = [f"{task_prefix} {q} Do you return to the starting point (yes/no)?" for q in questions]
+    answers = [f"{'yes' if str(a)=='True' else 'no'}" for a in answers]
+    
+    return questions, answers
+    
 
 def load_bigbench(filename, filedir):
     file_path = os.path.join(filedir, filename)
