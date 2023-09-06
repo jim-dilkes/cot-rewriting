@@ -181,9 +181,10 @@ class GPTModelInstance(ModelInstance):
                 n=n_sample,
             )
 
+        samples = [s["message"]["content"] for s in response["choices"]]
         return {
                 "input": query_messages,
-                "response": response["choices"][0]["message"]["content"],
+                "response": samples,
                 "token_counts": response["usage"]
         }
 
@@ -279,7 +280,7 @@ class HfModelInstance(ModelInstance):
             # Set this request's future result
             future.set_result({
                 "input": input_texts[i],
-                "response": generated_text,
+                "response": [generated_text],
                 "token_counts": {
                         "prompt_tokens": n_prompt_tokens,
                         "completion_tokens": n_completion_tokens,
