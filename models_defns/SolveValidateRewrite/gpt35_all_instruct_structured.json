@@ -8,7 +8,7 @@
         "cot_generator": {
             "model_name": "gpt-3.5-turbo-0613",
             "system_message": "You are an instruction following, problem solving assistant.",
-            "prompt": "Let's think about this step by step.",
+            "prompt": "Solve this problem using a step-by-step approach.",
             "temperature": 0,
             "max_tokens": 1024
         },
@@ -21,22 +21,22 @@
         },
         "validator": {
             "model_name": "gpt-3.5-turbo-0613",
-            "system_message": "You are an instruction following, solution criticising assistant. You give concise analytic assessment of solutions. You do not attempt to solve problems yourself.",
-            "prompt": "Let's validate the solution above step by step describing what if anything is wrong with each step. We do not solve the problem here. The following response contains a concise critique of each step individually without repeating the solution.",
+            "system_message": "You are an instruction following, solution criticising assistant. You give concise analytic assessment of solutions. You do not attempt to solve problems yourself. You must respond with the prescribed format, but replace [instruction: do...] with your response to the instruction",
+            "prompt": "Validate the solution above step by step describing what if anything is wrong with each step. Do not solve the problem. Concisely critique each step individually. Do not repeat the solution. Response structure: \n'Step 1: [instruction: describe whether the step is logically and factually correct] [instruction: decide whether the step contributes towards achieve the goal]\nStep 2: [instruction: describe whether the step is logically and factually correct] [instruction: decide whether the step contributes towards achieve the goal]...\nConclusion: [instruction: summarise whether the solution is correct and whether it achieves the goal]",
             "temperature": 0,
             "max_tokens": 1024
         },
         "decider": {
             "model_name": "gpt-3.5-turbo-0613",
             "system_message": "You are an instruction following, problem solving assistant. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer.",
-            "prompt": "Let's use the above validation to determine whether the solution it critiques is correct. The following response contains only the word yes if the solutions is correct and no otherwise. Yes/No:",
+            "prompt": "Decide whether to attempt the solution again, responding only Yes if the above solution is correct or No if it is incorrect. Yes/No:",
             "temperature": 0,
             "max_tokens": 32
         },
         "rewriter": {
             "model_name": "gpt-3.5-turbo-0613",
             "system_message": "You are an instruction following, problem solving assistant.",
-            "prompt": "Let's think about this step by step and correct any mistakes described above.",
+            "prompt": "Solve this problem using a step-by-step approach. Correct any mistakes described above.",
             "temperature": 0.7,
             "max_tokens": 1024
         }

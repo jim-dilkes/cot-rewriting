@@ -2,7 +2,7 @@
     "class": "PromptWithAnswerExtraction",
     "models": {
         "cot_generator": {
-            "model_name": "meta-llama/Llama-2-70b-chat-hf-4bit",
+            "model_name": "meta-llama/Llama-2-70b-hf-4bit",
             "system_message": "You are an instruction following, problem solving assistant.",
             "prompt": "Let's think about this step by step.",
             "temperature": 0.00001,
