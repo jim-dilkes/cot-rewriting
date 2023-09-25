@@ -1,0 +1,65 @@
+{
+    "Task": "logical_deduction/five_objects_multi",
+    "Models file": "gpt35_all_pattern",
+    "Prompt strategy": "SolveValidateRewrite",
+    "Prompt strategy kwargs": {
+        "max_rewrites": 1,
+        "rewrite_trigger": "no"
+    },
+    "Run identifier": "stg6",
+    "Date": "2023-09-05",
+    "Number of examples": 300,
+    "Number of correct": 119,
+    "Accuracy": 0.39666666666666667,
+    "Models": {
+        "cot_generator": {
+            "model_name": "gpt-3.5-turbo-0613",
+            "system_message": "You are an instruction following, problem solving assistant.",
+            "prompt": "Let's think about this step by step.",
+            "temperature": 0,
+            "max_tokens": 1024
+        },
+        "answer_extractor": {
+            "model_name": "gpt-3.5-turbo-0613",
+            "system_message": "You are an instruction following assistant. Only respond with the exact answer. Do not explain your answer. Do not respond with sentences. Give exactly one answer.",
+            "prompt": "Respond with exactly the given multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E. If there is no answer or multiple answers respond with NA. A/B/C/D/E/NA:",
+            "temperature": 0,
+            "max_tokens": 32
+        },
+        "validator": {
+            "model_name": "gpt-3.5-turbo-0613",
+            "system_message": "You are an instruction following, solution criticising assistant. You give concise analytic assessment of solutions. You do not attempt to solve problems yourself.",
+            "prompt": "Let's validate the solution above step by step describing what if anything is wrong with each step. We do not solve the problem here. The following response contains a concise critique of each step individually without repeating the solution.",
+            "temperature": 0,
+            "max_tokens": 1024
+        },
+        "decider": {
+            "model_name": "gpt-3.5-turbo-0613",
+            "system_message": "You are an instruction following, problem solving assistant. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer.",
+            "prompt": "Let's use the above validation to determine whether the solution it critiques is correct. The following response contains only the word yes if the solutions is correct and no otherwise. Yes/No:",
+            "temperature": 0,
+            "max_tokens": 32
+        },
+        "rewriter": {
+            "model_name": "gpt-3.5-turbo-0613",
+            "system_message": "You are an instruction following, problem solving assistant.",
+            "prompt": "Let's think about this step by step and correct any mistakes described above.",
+            "temperature": 0.7,
+            "max_tokens": 1024
+        }
+    },
+    "Token counts": {
+        "prompt": {
+            "total": 561995,
+            "per_example": 1873.3166666666666
+        },
+        "completion": {
+            "total": 175793,
+            "per_example": 585.9766666666667
+        },
+        "total": {
+            "total": 737788,
+            "per_example": 2459.2933333333335
+        }
+    }
+}

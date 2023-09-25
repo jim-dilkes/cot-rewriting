@@ -1,0 +1,42 @@
+{
+    "Task": "gsm8k",
+    "Models file": "llama2-7b_no_prompt",
+    "Prompt strategy": "PromptWithAnswerExtraction",
+    "Prompt strategy kwargs": {},
+    "Run identifier": "stg4",
+    "Date": "2023-09-20",
+    "Number of examples": 300,
+    "Number of correct": 66,
+    "Accuracy": 0.22,
+    "Models": {
+        "cot_generator": {
+            "model_name": "meta-llama/Llama-2-7b-chat-hf",
+            "system_message": "You are an instruction following, problem solving assistant.",
+            "prompt": "",
+            "temperature": 1e-05,
+            "max_tokens": 1024,
+            "batch_size": 5
+        },
+        "answer_extractor": {
+            "model_name": "gpt-3.5-turbo-0613",
+            "system_message": "You are an instruction following agent. Only respond with the exact answer. Do not explain your answer. Do not respond with sentences. Give exactly one answer.",
+            "prompt": "Respond with the given single value that is the answer to the problem. Do not explain your answer or include symbols. If there is no answer or multiple answers respond with NA.",
+            "temperature": 0,
+            "max_tokens": 32
+        }
+    },
+    "Token counts": {
+        "prompt": {
+            "total": 146046,
+            "per_example": 486.82
+        },
+        "completion": {
+            "total": 88819,
+            "per_example": 296.06333333333333
+        },
+        "total": {
+            "total": 234865,
+            "per_example": 782.8833333333333
+        }
+    }
+}

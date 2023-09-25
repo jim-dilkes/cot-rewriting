@@ -1,0 +1,65 @@
+{
+    "Task": "lsat-ar",
+    "Models file": "gpt35_all_instruct",
+    "Prompt strategy": "SolveValidateRewrite",
+    "Prompt strategy kwargs": {
+        "max_rewrites": 1,
+        "rewrite_trigger": "no"
+    },
+    "Run identifier": "stg4",
+    "Date": "2023-09-05",
+    "Number of examples": 230,
+    "Number of correct": 54,
+    "Accuracy": 0.23478260869565218,
+    "Models": {
+        "cot_generator": {
+            "model_name": "gpt-3.5-turbo-0613",
+            "system_message": "You are an instruction following, problem solving assistant.",
+            "prompt": "Solve this problem using a step-by-step approach.",
+            "temperature": 0,
+            "max_tokens": 1024
+        },
+        "answer_extractor": {
+            "model_name": "gpt-3.5-turbo-0613",
+            "system_message": "You are an instruction following assistant. Only respond with the exact answer. Do not explain your answer. Do not respond with sentences. Give exactly one answer.",
+            "prompt": "Respond with the given multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E. If there is no answer or multiple answers respond with F.",
+            "temperature": 0,
+            "max_tokens": 32
+        },
+        "validator": {
+            "model_name": "gpt-3.5-turbo-0613",
+            "system_message": "You are an instruction following, solution criticising assistant. You give concise analytic assessment of solutions. You do not attempt to solve problems yourself.",
+            "prompt": "Validate the solution above step by step describing what if anything is wrong with each step. Do not solve the problem. Concisely critique each step individually. Do not repeat the solution.",
+            "temperature": 0,
+            "max_tokens": 1024
+        },
+        "decider": {
+            "model_name": "gpt-3.5-turbo-0613",
+            "system_message": "You are an instruction following, problem solving assistant. Only respond with the exact answer. Do not explain your answers. Do not respond with sentences. Give exactly one answer.",
+            "prompt": "Decide whether to attempt the solution again, responding only Yes if the above solution is correct or No if it is incorrect. Yes/No:",
+            "temperature": 0,
+            "max_tokens": 32
+        },
+        "rewriter": {
+            "model_name": "gpt-3.5-turbo-0613",
+            "system_message": "You are an instruction following, problem solving assistant.",
+            "prompt": "Solve this problem using a step-by-step approach. Correct any mistakes described above.",
+            "temperature": 0,
+            "max_tokens": 1024
+        }
+    },
+    "Token counts": {
+        "prompt": {
+            "total": 687635,
+            "per_example": 2989.717391304348
+        },
+        "completion": {
+            "total": 234568,
+            "per_example": 1019.8608695652174
+        },
+        "total": {
+            "total": 922203,
+            "per_example": 4009.5782608695654
+        }
+    }
+}

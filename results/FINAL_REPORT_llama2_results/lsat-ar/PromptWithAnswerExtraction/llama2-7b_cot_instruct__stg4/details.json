@@ -1,0 +1,42 @@
+{
+    "Task": "lsat-ar",
+    "Models file": "llama2-7b_cot_instruct",
+    "Prompt strategy": "PromptWithAnswerExtraction",
+    "Prompt strategy kwargs": {},
+    "Run identifier": "stg4",
+    "Date": "2023-08-30",
+    "Number of examples": 230,
+    "Number of correct": 50,
+    "Accuracy": 0.21739130434782608,
+    "Models": {
+        "cot_generator": {
+            "model_name": "meta-llama/Llama-2-7b-chat-hf",
+            "system_message": "You are an instruction following, problem solving assistant.",
+            "prompt": "Solve this problem using a step-by-step approach.",
+            "temperature": 1e-05,
+            "max_tokens": 1024,
+            "batch_size": 7
+        },
+        "answer_extractor": {
+            "model_name": "gpt-3.5-turbo-0613",
+            "system_message": "You are an instruction following agent. Only respond with the exact answer. Do not explain your answer. Do not respond with sentences. Give exactly one answer.",
+            "prompt": "Respond with the given multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E. If there is no answer or multiple answers respond with F.",
+            "temperature": 0,
+            "max_tokens": 32
+        }
+    },
+    "Token counts": {
+        "prompt": {
+            "total": 288920,
+            "per_example": 1256.1739130434783
+        },
+        "completion": {
+            "total": 177248,
+            "per_example": 770.6434782608695
+        },
+        "total": {
+            "total": 466168,
+            "per_example": 2026.817391304348
+        }
+    }
+}

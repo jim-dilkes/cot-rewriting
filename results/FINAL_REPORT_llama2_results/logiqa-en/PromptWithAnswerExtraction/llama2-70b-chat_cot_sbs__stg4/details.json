@@ -1,0 +1,42 @@
+{
+    "Task": "logiqa-en",
+    "Models file": "llama2-70b-chat_cot_sbs",
+    "Prompt strategy": "PromptWithAnswerExtraction",
+    "Prompt strategy kwargs": {},
+    "Run identifier": "stg4",
+    "Date": "2023-09-04",
+    "Number of examples": 200,
+    "Number of correct": 67,
+    "Accuracy": 0.335,
+    "Models": {
+        "cot_generator": {
+            "model_name": "meta-llama/Llama-2-70b-chat-hf-4bit",
+            "system_message": "You are an instruction following, problem solving assistant.",
+            "prompt": "Let's think about this step by step.",
+            "temperature": 1e-05,
+            "max_tokens": 1024,
+            "batch_size": 5
+        },
+        "answer_extractor": {
+            "model_name": "gpt-3.5-turbo-0613",
+            "system_message": "You are an instruction following agent. Only respond with the exact answer. Do not explain your answer. Do not respond with sentences. Give exactly one answer.",
+            "prompt": "Respond with the given multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E. If there is no answer or multiple answers respond with F.",
+            "temperature": 0,
+            "max_tokens": 32
+        }
+    },
+    "Token counts": {
+        "prompt": {
+            "total": 210478,
+            "per_example": 1052.39
+        },
+        "completion": {
+            "total": 126158,
+            "per_example": 630.79
+        },
+        "total": {
+            "total": 336636,
+            "per_example": 1683.18
+        }
+    }
+}

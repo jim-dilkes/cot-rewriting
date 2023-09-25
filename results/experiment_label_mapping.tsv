@@ -1,0 +1,22 @@
+label	prompt_strategy	Prompt Strategy	Model Name	Experiment	Temperature	Samples
+gpt35_cot_instruct__stg4	PromptWithAnswerExtraction	Chain-of-Thought	GPT 3.5 Turbo 0613	Instruction	-	
+gpt35_cot_sbs__stg4	PromptWithAnswerExtraction	Chain-of-Thought	GPT 3.5 Turbo 0613	Let's think	-	
+gpt35_no_prompt__stg4	PromptWithAnswerExtraction	Input-Output	GPT 3.5 Turbo 0613	-	-	
+gpt35_sc_instruct__stg4	SelfConsistency	Self Consistency	GPT 3.5 Turbo 0613	Instruction	1	5
+gpt35_simple_final__stg6	SampleTree	Sample Path	GPT 3.5 Turbo 0613	Simple	1	3
+gpt35_structured_approach_final__stg6	SampleTree	Sample Path	GPT 3.5 Turbo 0613	Plan	1	3
+gpt35_structured_final__stg6	SampleTree	Sample Path	GPT 3.5 Turbo 0613	Structured	1	3
+gpt35_structured_nosample_final__stg6	SampleTree	Sample Path	GPT 3.5 Turbo 0613	Structured	-	1
+gpt35_structured_approach_nosample_final__stg6	SampleTree	Sample Path	GPT 3.5 Turbo 0613	Plan	-	1
+gpt35_all_instruct__stg4	SolveValidateRewrite	Rewriting	GPT 3.5 Turbo 0613	Instruction	0	
+gpt35_all_instruct__stg4_T07	SolveValidateRewrite	Rewriting	GPT 3.5 Turbo 0613	Instruction	0.7	
+gpt35_all_instruct_structured_T07__stg6	SolveValidateRewrite	Rewriting	GPT 3.5 Turbo 0613	Structured	0.7	
+gpt35_all_instruct_structured__stg6	SolveValidateRewrite	Rewriting	GPT 3.5 Turbo 0613	Structured	0	
+gpt35_all_pattern__stg4	SolveValidateRewrite	Rewriting	GPT 3.5 Turbo 0613	Let's think	0.7	
+llama2-70b-chat_cot_instruct__stg4	PromptWithAnswerExtraction	Chain-of-Thought	Llama 2 70B	Instruction	-	
+llama2-70b-chat_cot_sbs__stg4	PromptWithAnswerExtraction	Chain-of-Thought	Llama 2 70B	Let's think	-	
+llama2-7b_cot_instruct__stg4	PromptWithAnswerExtraction	Chain-of-Thought	Llama 2 7B	Instruction	-	
+llama2-7b_cot_sbs__stg4	PromptWithAnswerExtraction	Chain-of-Thought	Llama 2 7B	Let's think	-	
+llama2-70b_no_prompt__stg4	PromptWithAnswerExtraction	Input-Output	Llama 2 70B	-	-	
+llama2-7b_no_prompt__stg4	PromptWithAnswerExtraction	Input-Output	Llama 2 7B	-	-	
+SampleTree/gpt35_structured_approach_nosample_final						

@@ -1,0 +1,41 @@
+{
+    "Task": "logiqa-en",
+    "Models file": "gpt35_cot_instruct",
+    "Prompt strategy": "PromptWithAnswerExtraction",
+    "Prompt strategy kwargs": {},
+    "Run identifier": "stg4",
+    "Date": "2023-08-25",
+    "Number of examples": 300,
+    "Number of correct": 111,
+    "Accuracy": 0.37,
+    "Models": {
+        "cot_generator": {
+            "model_name": "gpt-3.5-turbo-0613",
+            "system_message": "You are an instruction following, problem solving assistant.",
+            "prompt": "Solve this problem using a step-by-step approach.",
+            "temperature": 0,
+            "max_tokens": 1024
+        },
+        "answer_extractor": {
+            "model_name": "gpt-3.5-turbo-0613",
+            "system_message": "You are an instruction following agent. Only respond with the exact answer. Do not explain your answer. Do not respond with sentences. Give exactly one answer.",
+            "prompt": "Respond with the given multiple choice answer to the question. Do not explain your answer only use A/B/C/D/E. If there is no answer or multiple answers respond with F.",
+            "temperature": 0,
+            "max_tokens": 32
+        }
+    },
+    "Token counts": {
+        "prompt": {
+            "total": 270673,
+            "per_example": 902.2433333333333
+        },
+        "completion": {
+            "total": 126609,
+            "per_example": 422.03
+        },
+        "total": {
+            "total": 397282,
+            "per_example": 1324.2733333333333
+        }
+    }
+}

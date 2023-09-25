@@ -1,0 +1,43 @@
+{
+    "Task": "navigate",
+    "Models file": "gpt35_sc_instruct",
+    "Prompt strategy": "SelfConsistency",
+    "Prompt strategy kwargs": {
+        "n_samples": 5
+    },
+    "Run identifier": "stg4",
+    "Date": "2023-09-07",
+    "Number of examples": 300,
+    "Number of correct": 203,
+    "Accuracy": 0.6766666666666666,
+    "Models": {
+        "cot_generator": {
+            "model_name": "gpt-3.5-turbo-0613",
+            "system_message": "You are an instruction following, problem solving assistant.",
+            "prompt": "Solve this problem using a step-by-step approach.",
+            "temperature": 1,
+            "max_tokens": 1024
+        },
+        "answer_extractor": {
+            "model_name": "gpt-3.5-turbo-0613",
+            "system_message": "You are an instruction following agent. Only respond with the exact answer. Do not explain your answer. Do not respond with sentences. Give exactly one answer.",
+            "prompt": "Respond \\{yes\\} if you do return to the starting. Respond \\{no\\} if you do not return to the starting point. If there is no answer or multiple answers respond with X.",
+            "temperature": 0,
+            "max_tokens": 32
+        }
+    },
+    "Token counts": {
+        "prompt": {
+            "total": 560485,
+            "per_example": 1868.2833333333333
+        },
+        "completion": {
+            "total": 315648,
+            "per_example": 1052.16
+        },
+        "total": {
+            "total": 876133,
+            "per_example": 2920.443333333333
+        }
+    }
+}
