@@ -1,3 +1,4 @@
+import random 
 from abc import ABC, abstractmethod
 import src.models as md
 import string
@@ -83,7 +84,10 @@ class PromptStrategy(ABC):
 
 class PromptWithAnswerExtraction(PromptStrategy):
     def __init__(self, model_messages_json, task_name):
-        self.required_model_tags = ["cot_generator", "answer_extractor"]
+        self.required_model_tags = [
+            "cot_generator",
+            "answer_extractor"
+            ]
         super().__init__(model_messages_json, task_name)
 
     async def proc_example(
@@ -100,6 +104,45 @@ class PromptWithAnswerExtraction(PromptStrategy):
             "answers": [answer],
             "query_details": gen_respose_dicts,
         }
+
+
+class SelfConsistency(PromptStrategy):
+    def __init__(self, model_messages_json, task_name, n_samples=3):
+        self.n_samples = n_samples
+        self.required_model_tags = [
+            "cot_generator",
+            "answer_extractor"
+            ]
+        super().__init__(model_messages_json, task_name)
+        
+    async def proc_example(
+        self, example: str, example_num: int, semaphore: asyncio.Semaphore
+    ):
+        gen_respose_dicts = []
+        
+        async with semaphore:
+            cot_response_dict = await self.models["cot_generator"].generate_async(example, n_sample=self.n_samples)
+            gen_respose_dicts.append(cot_response_dict)
+        
+        answers = []
+        for r in cot_response_dict['response']:
+            answer_content = f"Problem Statement: {example}\n\nAnswer: {r}"
+            answer_response_dict = await self.models["answer_extractor"].generate_async(answer_content)
+            gen_respose_dicts.append(answer_response_dict)
+            answers.append(answer_response_dict['response'][0])
+
+        clean_answers = [clean_answer(a, self.task_name) for a in answers]
+        # Count instances of each unique answer
+        answer_counts = {a: clean_answers.count(a) for a in clean_answers}
+        # Select the most common answer. If there is a tie, select randomly from the most common answers
+        max_keys = [k for k, v in answer_counts.items() if v == max(answer_counts.values())]
+        sc_answer = random.choice(max_keys)
+
+            
+        print(f"\rDone example {example_num}", end="")
+        sys.stdout.flush()
+            
+        return [" "], [sc_answer], gen_respose_dicts
 
 
 class SolveValidateRewrite(PromptStrategy):
