@@ -4,10 +4,23 @@
 
 # Define the repo and subdirs
 repo="https://github.com/google/BIG-bench.git"
-subdirs=("bigbench/benchmark_tasks/strategyqa" "bigbench/benchmark_tasks/tracking_shuffled_objects")
+subdirs=("bigbench/benchmark_tasks/strategyqa"
+    "bigbench/benchmark_tasks/tracking_shuffled_objects"
+    "bigbench/benchmark_tasks/logical_deduction"
+    "bigbench/benchmark_tasks/navigate")
 
 # Define destination directories
-destDirs=("strategyqa" "tracking_shuffled_objects")
+$destDirs = @(
+    "strategyqa",
+    "tracking_shuffled_objects",
+    "logical_deduction",
+    "navigate"
+)
+# Define destination directories
+destDirs=("strategyqa"
+    "tracking_shuffled_objects"
+    "logical_deduction"
+    "navigate")
 
 # Clone the repo into a temp directory
 tempDir="BIG-bench-temp"
