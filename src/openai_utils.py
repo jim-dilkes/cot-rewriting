@@ -4,19 +4,21 @@ import os
 import backoff
 import httpx, ssl
 import json
-import time
-
+import random
 import logging
 
 # Get a logger instance for the current file
 logger_name = "main_logger"
 logger = logging.getLogger(logger_name)
 
-api_key = os.getenv("OPENAI_API_KEY", "")
-if api_key != "":
-    openai.api_key = api_key
-else:
-    print("Warning: OPENAI_API_KEY is not set")
+key_pool_envvars = ['OPENAI_API_KEY', 'OPENAI_API_KEY_2']
+key_pool = [os.getenv(envvar, "") for envvar in key_pool_envvars]
+
+for i, key in enumerate(key_pool):
+    if key == "":
+        print(f"Warning: {key_pool_envvars[i]} is not set")
+
+last_used_api_key = ""
     
 MAX_TRIES = 10
 
@@ -28,11 +30,15 @@ async def chat_with_backoff_async(**kwargs):
     logger.debug(f"Making request {request_id} to OpenAI API: {kwargs}")
     async with httpx.AsyncClient(timeout=60.0) as client:
         try:
-            response = await client.post('https://api.openai.com/v1/chat/completions', headers={'Authorization': f'Bearer {api_key}'}, json=kwargs)
+            # Select an API key that wasnt last used
+            global last_used_api_key
+            use_api_key = random.choice([key for key in key_pool if key != last_used_api_key])
+            last_used_api_key = use_api_key
+            response = await client.post('https://api.openai.com/v1/chat/completions', headers={'Authorization': f'Bearer {use_api_key}'}, json=kwargs)
         except httpx.ReadTimeout as e:
             logger.error(f"Request {request_id} timed out: {e}")
             raise e
-        except Exception as e:  
+        except Exception as e:
             logger.error(f"Request {request_id} encountered an error: {e}")
             raise e
         
@@ -64,7 +70,6 @@ class OpenAIChatMessages:
         self.messages.append(structure_message(role, content))
         
     
-        
     def format_single_prompt(self, join_char='\n', use_roles=False, use_system_messages=False):
         # Format messages as a single prompt, using only the content joined by join_char
         msgs = self.messages
