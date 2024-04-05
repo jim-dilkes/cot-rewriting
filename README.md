@@ -6,7 +6,7 @@ OpenAI chat models (accessed through the OpenAI API) and locally run HuggingFace
 Each experiment has a config .json file in the model_defns directory. This file specifies run details such as which prompt strategy, the prompt text, generation parameters, and which model(s) to use.
 New prompt strategies may be defined in [src/prompt_strategies.py](https://github.com/jim-dilkes/cot-rewriting/blob/main/src/prompt_strategies.py).
 
-## Command-Line Arguments
+## Command-Line Arguments for run.py
 - `--task_name`: Specifies the task to execute. Choices include predefined tasks like "gsm8k", "strategyqa", etc.
 - `--model_defns_file`: Path and name of the configuration file inside `./models_defns`, defining the model, prompting strategy, prompt text, generation parameters.
 - `--run_identifier`: A string to identify this run. Used in filenames to differentiate results.
